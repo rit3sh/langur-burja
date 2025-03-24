@@ -122,43 +122,51 @@ const BettingPanel: React.FC = () => {
               <Box 
                 sx={{ 
                   position: 'relative',
-                  display: 'inline-block',
-                  textAlign: 'center',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  p: 1,
+                  backgroundColor: selectedSymbol === symbol ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
+                  borderRadius: 2,
+                  transition: 'all 0.2s ease',
+                  border: playerBets[symbol] && playerBets[symbol] > 0 
+                    ? '1px dashed rgba(255, 215, 0, 0.5)' 
+                    : '1px solid transparent',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)'
+                  }
                 }}
               >
-                <DiceSymbol
-                  symbol={symbol}
-                  size={50}
-                  active={selectedSymbol === symbol}
-                  onClick={() => handleSymbolSelect(symbol)}
-                />
-                {playerBets[symbol] && playerBets[symbol] > 0 && (
-                  <Chip
-                    label={`$${playerBets[symbol]}`}
-                    size="small"
-                    sx={{
-                      position: 'absolute',
-                      top: -10,
-                      right: -10,
-                      fontSize: '0.7rem',
-                      backgroundColor: 'rgba(255, 215, 0, 0.15)',
-                      color: '#FFD700',
-                      border: '1px solid rgba(255, 215, 0, 0.3)',
-                      fontWeight: 'bold'
-                    }}
+                <Box sx={{ position: 'relative' }}>
+                  <DiceSymbol
+                    symbol={symbol}
+                    size={45}
+                    active={selectedSymbol === symbol}
+                    onClick={() => handleSymbolSelect(symbol)}
+                    showLabel={true}
                   />
-                )}
-                <Typography 
-                  variant="body2" 
-                  align="center" 
-                  sx={{ 
-                    mt: 1, 
-                    opacity: 0.7,
-                    fontSize: '0.75rem' 
-                  }}
-                >
-                  {playerBets[symbol] ? `$${playerBets[symbol]}` : '0'}
-                </Typography>
+                  {playerBets[symbol] && playerBets[symbol] > 0 && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: -8,
+                        right: -8,
+                        fontSize: '0.7rem',
+                        backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                        color: '#4CAF50',
+                        border: '1px solid rgba(76, 175, 80, 0.5)',
+                        fontWeight: 'bold',
+                        borderRadius: '10px',
+                        px: 1,
+                        py: 0.25,
+                        minWidth: '24px',
+                        textAlign: 'center'
+                      }}
+                    >
+                      ${playerBets[symbol]}
+                    </Box>
+                  )}
+                </Box>
               </Box>
             </Grid>
           ))}

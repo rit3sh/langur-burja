@@ -26,7 +26,7 @@ const Die: React.FC<DieProps> = ({ symbol, rolling = false }) => {
         transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
         animation: rolling 
           ? 'roll 0.8s infinite cubic-bezier(0.4, 0.0, 0.2, 1)' 
-          : 'pulse 2s infinite',
+          : 'none',
         '&:hover': {
           transform: 'perspective(500px) rotateX(10deg) scale(1.05)',
           boxShadow: '0 15px 30px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22)',
@@ -44,7 +44,7 @@ const Die: React.FC<DieProps> = ({ symbol, rolling = false }) => {
         },
       }}
     >
-      <DiceSymbol symbol={symbol} size={45} color={rolling ? "secondary" : "primary"} />
+      <DiceSymbol symbol={symbol} size={55} active={rolling} />
     </Paper>
   );
 };
