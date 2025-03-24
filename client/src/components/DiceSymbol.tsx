@@ -40,6 +40,26 @@ const CrownIcon = (props: SvgIconProps) => (
   </SvgIcon>
 );
 
+// Define symbol colors
+const getSymbolColor = (symbol: SymbolType) => {
+  switch (symbol) {
+    case 'Heart':
+      return '#ff3b30'; // Red
+    case 'Diamond':
+      return '#ff9500'; // Orange
+    case 'Club':
+      return '#34c759'; // Green
+    case 'Spade':
+      return '#007aff'; // Blue
+    case 'Flag':
+      return '#af52de'; // Purple
+    case 'Crown':
+      return '#ffcc00'; // Gold
+    default:
+      return '#ffcc00'; // Default gold
+  }
+};
+
 interface DiceSymbolProps {
   symbol: SymbolType;
   size?: number;
@@ -75,6 +95,7 @@ const DiceSymbol: React.FC<DiceSymbolProps> = ({
   onClick,
 }) => {
   const IconComponent = getSymbolIcon(symbol);
+  const symbolColor = getSymbolColor(symbol);
   
   return (
     <Box
@@ -84,23 +105,44 @@ const DiceSymbol: React.FC<DiceSymbolProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: 1,
-        backgroundColor: active ? 'rgba(0, 0, 0, 0.1)' : 'transparent',
-        transition: 'all 0.2s',
+        borderRadius: size / 4,
+        backgroundColor: active ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+        transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
         cursor: onClick ? 'pointer' : 'default',
         '&:hover': {
-          backgroundColor: onClick ? 'rgba(0, 0, 0, 0.05)' : 'transparent',
+          backgroundColor: onClick ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+          transform: onClick ? 'scale(1.1)' : 'none',
         },
+        position: 'relative',
+        overflow: 'hidden',
       }}
       onClick={onClick}
     >
       <IconComponent
-        color={color as any}
         sx={{
           width: size * 0.8,
           height: size * 0.8,
+          color: symbolColor,
+          filter: `drop-shadow(0 0 3px ${symbolColor}80)`,
+          animation: active ? 'pulse 1.5s infinite' : 'none',
+          transition: 'all 0.2s ease',
         }}
       />
+      {active && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            borderRadius: '50%',
+            background: `radial-gradient(circle, ${symbolColor}30 0%, transparent 70%)`,
+            opacity: 0.6,
+            animation: 'pulse 1.5s infinite',
+          }}
+        />
+      )}
     </Box>
   );
 };

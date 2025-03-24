@@ -4,10 +4,11 @@ import {
   Typography,
   TextField,
   Button,
-  Paper,
   Grid,
   Chip,
+  InputAdornment,
 } from '@mui/material';
+import { AttachMoney as MoneyIcon } from '@mui/icons-material';
 import { SYMBOLS, SymbolType, useGame } from '../context/GameContext';
 import DiceSymbol from './DiceSymbol';
 
@@ -47,26 +48,82 @@ const BettingPanel: React.FC = () => {
   const isBettingDisabled = gameState !== 'betting';
 
   return (
-    <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-      <Typography variant="h6" gutterBottom>
+    <>
+      <Typography 
+        variant="h5" 
+        gutterBottom
+        sx={{ 
+          color: 'primary.main',
+          fontWeight: 600,
+          textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+          mb: 3,
+          position: 'relative',
+          display: 'inline-block',
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            left: 0,
+            bottom: -8,
+            width: '60%',
+            height: 3,
+            background: 'linear-gradient(90deg, #FFD700, transparent)',
+            borderRadius: 3,
+          }
+        }}
+      >
         Place Your Bets
       </Typography>
       
-      <Typography variant="body2" gutterBottom>
-        Your Balance: ${playerBalance}
-      </Typography>
-
-      <Box sx={{ my: 2 }}>
-        <Typography variant="subtitle2" gutterBottom>
-          Select Symbol:
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          mb: 3, 
+          p: 2,
+          borderRadius: 2,
+          background: 'rgba(0, 0, 0, 0.2)',
+          backdropFilter: 'blur(5px)',
+          border: '1px solid rgba(255, 255, 255, 0.05)'
+        }}
+      >
+        <Typography variant="body2" sx={{ fontWeight: 'medium', color: 'text.secondary' }}>
+          Your Balance
         </Typography>
-        <Grid container spacing={1}>
+        <Typography variant="h6" sx={{ color: '#4CAF50', fontWeight: 'bold' }}>
+          ${playerBalance}
+        </Typography>
+      </Box>
+
+      <Box sx={{ my: 3 }}>
+        <Typography 
+          variant="subtitle1" 
+          sx={{ 
+            mb: 2, 
+            fontWeight: 500,
+            display: 'flex',
+            alignItems: 'center',
+            '&::before': {
+              content: '""',
+              width: 4,
+              height: 16,
+              backgroundColor: 'primary.main',
+              display: 'inline-block',
+              marginRight: 1,
+              borderRadius: 1
+            }
+          }}
+        >
+          Select Symbol
+        </Typography>
+        <Grid container spacing={2} sx={{ justifyContent: 'center' }}>
           {SYMBOLS.map((symbol) => (
             <Grid item key={symbol}>
               <Box 
                 sx={{ 
                   position: 'relative',
-                  display: 'inline-block'
+                  display: 'inline-block',
+                  textAlign: 'center',
                 }}
               >
                 <DiceSymbol
@@ -78,23 +135,45 @@ const BettingPanel: React.FC = () => {
                 {playerBets[symbol] && playerBets[symbol] > 0 && (
                   <Chip
                     label={`$${playerBets[symbol]}`}
-                    color="primary"
                     size="small"
                     sx={{
                       position: 'absolute',
                       top: -10,
                       right: -10,
                       fontSize: '0.7rem',
+                      backgroundColor: 'rgba(255, 215, 0, 0.15)',
+                      color: '#FFD700',
+                      border: '1px solid rgba(255, 215, 0, 0.3)',
+                      fontWeight: 'bold'
                     }}
                   />
                 )}
+                <Typography 
+                  variant="body2" 
+                  align="center" 
+                  sx={{ 
+                    mt: 1, 
+                    opacity: 0.7,
+                    fontSize: '0.75rem' 
+                  }}
+                >
+                  {playerBets[symbol] ? `$${playerBets[symbol]}` : '0'}
+                </Typography>
               </Box>
             </Grid>
           ))}
         </Grid>
       </Box>
 
-      <Box sx={{ mt: 3, display: 'flex', alignItems: 'flex-end', gap: 2 }}>
+      <Box 
+        sx={{ 
+          mt: 3, 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: { xs: 'stretch', sm: 'flex-end' }, 
+          gap: 2,
+        }}
+      >
         <TextField
           label="Bet Amount"
           variant="outlined"
@@ -102,9 +181,22 @@ const BettingPanel: React.FC = () => {
           value={betAmount}
           onChange={handleBetAmountChange}
           disabled={isBettingDisabled}
-          sx={{ width: '120px' }}
+          sx={{ 
+            width: { xs: '100%', sm: '150px' },
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 2,
+              backgroundColor: 'rgba(0, 0, 0, 0.1)',
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'rgba(255, 215, 0, 0.5)',
+              },
+            }
+          }}
           InputProps={{
-            startAdornment: <Typography sx={{ mr: 0.5 }}>$</Typography>,
+            startAdornment: (
+              <InputAdornment position="start">
+                <MoneyIcon sx={{ color: '#4CAF50' }} fontSize="small" />
+              </InputAdornment>
+            ),
           }}
         />
         <Button
@@ -112,11 +204,17 @@ const BettingPanel: React.FC = () => {
           color="primary"
           onClick={handlePlaceBet}
           disabled={!selectedSymbol || !betAmount || isBettingDisabled}
+          sx={{
+            py: 1.2,
+            width: { xs: '100%', sm: 'auto' },
+            minWidth: { sm: '120px' }
+          }}
+          className="game-btn"
         >
           Place Bet
         </Button>
       </Box>
-    </Paper>
+    </>
   );
 };
 

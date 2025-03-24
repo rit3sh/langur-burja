@@ -1,5 +1,5 @@
 import React from 'react';
-import { Paper, Typography, Box, Grid, Divider } from '@mui/material';
+import { Typography, Box, Grid, Divider } from '@mui/material';
 import { SymbolType, useGame } from '../context/GameContext';
 import DiceSymbol from './DiceSymbol';
 
@@ -10,9 +10,19 @@ interface SymbolCountProps {
 
 const SymbolCount: React.FC<SymbolCountProps> = ({ symbol, count }) => {
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
+    <Box 
+      sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        mr: 2,
+        py: 0.5,
+        px: 1,
+        borderRadius: 1,
+        backgroundColor: 'rgba(255, 255, 255, 0.05)'
+      }}
+    >
       <DiceSymbol symbol={symbol} size={30} />
-      <Typography variant="body2" sx={{ ml: 1 }}>
+      <Typography variant="body2" sx={{ ml: 1, fontWeight: 500 }}>
         × {count}
       </Typography>
     </Box>
@@ -43,16 +53,63 @@ const GameResults: React.FC = () => {
   }
 
   return (
-    <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-      <Typography variant="h6" gutterBottom>
+    <>
+      <Typography 
+        variant="h5" 
+        gutterBottom
+        sx={{ 
+          color: 'primary.main',
+          fontWeight: 600,
+          textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+          mb: 3,
+          position: 'relative',
+          display: 'inline-block',
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            left: 0,
+            bottom: -8,
+            width: '60%',
+            height: 3,
+            background: 'linear-gradient(90deg, #FFD700, transparent)',
+            borderRadius: 3,
+          }
+        }}
+      >
         Roll Results
       </Typography>
       
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="subtitle2" gutterBottom>
-          Symbol Counts:
+      <Box 
+        sx={{ 
+          mb: 3,
+          p: 2,
+          borderRadius: 2,
+          background: 'rgba(0, 0, 0, 0.2)',
+          backdropFilter: 'blur(5px)',
+          border: '1px solid rgba(255, 255, 255, 0.05)'
+        }}
+      >
+        <Typography 
+          variant="subtitle1" 
+          sx={{ 
+            mb: 2, 
+            fontWeight: 500,
+            display: 'flex',
+            alignItems: 'center',
+            '&::before': {
+              content: '""',
+              width: 4,
+              height: 16,
+              backgroundColor: 'primary.main',
+              display: 'inline-block',
+              marginRight: 1,
+              borderRadius: 1
+            }
+          }}
+        >
+          Symbol Counts
         </Typography>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', mb: 2 }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
           {Object.entries(symbolCounts)
             .sort(([, countA], [, countB]) => countB - countA)
             .map(([symbol, count]) => (
@@ -65,51 +122,94 @@ const GameResults: React.FC = () => {
         </Box>
       </Box>
       
-      <Divider sx={{ my: 2 }} />
-      
       {playerId && payouts && payouts[playerId] && (
-        <Box>
-          <Typography variant="subtitle2" gutterBottom>
-            Your Results:
+        <Box 
+          sx={{ 
+            p: 2,
+            borderRadius: 2,
+            background: 'rgba(0, 0, 0, 0.2)',
+            backdropFilter: 'blur(5px)',
+            border: '1px solid rgba(255, 255, 255, 0.05)'
+          }}
+        >
+          <Typography 
+            variant="subtitle1" 
+            sx={{ 
+              mb: 2, 
+              fontWeight: 500,
+              display: 'flex',
+              alignItems: 'center',
+              '&::before': {
+                content: '""',
+                width: 4,
+                height: 16,
+                backgroundColor: totalWinnings > 0 ? '#4CAF50' : totalWinnings < 0 ? '#FF3D00' : 'primary.main',
+                display: 'inline-block',
+                marginRight: 1,
+                borderRadius: 1
+              }
+            }}
+          >
+            Your Results
           </Typography>
-          <Grid container spacing={1}>
-            {Object.entries(payouts[playerId]).map(([symbol, amount]) => (
-              amount !== 0 && (
-                <Grid item key={symbol} xs={12} sm={6}>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            {Object.entries(payouts[playerId])
+              .filter(([, amount]) => amount !== 0)
+              .map(([symbol, amount]) => (
+                <Grid item key={symbol} xs={6} sm={4}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    py: 0.5,
+                    px: 1,
+                    borderRadius: 1,
+                    backgroundColor: amount > 0 ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)',
+                    border: amount > 0 ? '1px solid rgba(76, 175, 80, 0.2)' : '1px solid rgba(244, 67, 54, 0.2)'
+                  }}>
                     <DiceSymbol symbol={symbol as SymbolType} size={24} />
                     <Typography
                       variant="body2"
                       sx={{
                         ml: 1,
-                        color: amount > 0 ? 'success.main' : 'error.main',
+                        fontWeight: 600,
+                        color: amount > 0 ? '#4CAF50' : '#FF3D00',
                       }}
                     >
                       {amount > 0 ? `+$${amount}` : `-$${Math.abs(amount)}`}
                     </Typography>
                   </Box>
                 </Grid>
-              )
-            ))}
+              ))}
           </Grid>
           
-          <Box sx={{ mt: 2 }}>
+          <Divider sx={{ my: 2, backgroundColor: 'rgba(255, 255, 255, 0.05)' }} />
+          
+          <Box sx={{ 
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            py: 1
+          }}>
+            <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
+              Total Result:
+            </Typography>
             <Typography
-              variant="subtitle1"
+              variant="h6"
               sx={{
-                color: totalWinnings > 0 ? 'success.main' : totalWinnings < 0 ? 'error.main' : 'text.primary',
+                fontWeight: 'bold',
+                color: totalWinnings > 0 ? '#4CAF50' : totalWinnings < 0 ? '#FF3D00' : 'text.primary',
               }}
             >
               {totalWinnings > 0
-                ? `You won $${totalWinnings}!`
+                ? `+$${totalWinnings}`
                 : totalWinnings < 0
-                ? `You lost $${Math.abs(totalWinnings)}`
-                : 'No change in balance'}
+                ? `-$${Math.abs(totalWinnings)}`
+                : `$0`}
             </Typography>
           </Box>
         </Box>
       )}
-    </Paper>
+    </>
   );
 };
 
