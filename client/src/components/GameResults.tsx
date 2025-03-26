@@ -1,7 +1,67 @@
 import React from "react";
-import { Typography, Box, Grid, Divider, Paper } from "@mui/material";
-import { SymbolType, useGame } from "../context/GameContext";
+import { Typography, Box, Grid, Paper } from "@mui/material";
+import { SymbolType, useGame, SYMBOLS } from "../context/GameContext";
 import DiceSymbol from "./DiceSymbol";
+
+// Define symbol names in Nepali
+const getSymbolName = (symbol: SymbolType): string => {
+	switch (symbol) {
+		case 'Spade':
+			return 'Hukum';
+		case 'Heart':
+			return 'Paan';
+		case 'Diamond':
+			return 'Itta';
+		case 'Club':
+			return 'Chidi';
+		case 'Flag':
+			return 'Jhanda';
+		case 'Crown':
+			return 'Burja';
+		default:
+			return symbol;
+	}
+};
+
+// Define background colors for each symbol
+const getSymbolBgColor = (symbol: SymbolType): string => {
+	switch (symbol) {
+		case 'Spade':
+			return '#4CAF50'; // Green
+		case 'Heart':
+			return '#90CAF9'; // Light Blue
+		case 'Diamond':
+			return '#FDD835'; // Yellow
+		case 'Club':
+			return '#4CAF50'; // Green
+		case 'Flag':
+			return '#FF8A65'; // Pink/Orange
+		case 'Crown':
+			return '#4CAF50'; // Green
+		default:
+			return '#757575';
+	}
+};
+
+// Define symbol colors
+const getSymbolColor = (symbol: SymbolType): string => {
+	switch (symbol) {
+		case 'Heart':
+			return '#c62828'; // Deep Red
+		case 'Diamond':
+			return '#ef6c00'; // Deep Orange
+		case 'Club':
+			return '#2e7d32'; // Deep Green
+		case 'Spade':
+			return '#1565c0'; // Deep Blue
+		case 'Flag':
+			return '#6a1b9a'; // Deep Purple
+		case 'Crown':
+			return '#ff8f00'; // Deep Gold
+		default:
+			return '#000000';
+	}
+};
 
 interface SymbolCountProps {
 	symbol: SymbolType;
@@ -9,21 +69,64 @@ interface SymbolCountProps {
 }
 
 const SymbolCount: React.FC<SymbolCountProps> = ({ symbol, count }) => {
+	const bgColor = getSymbolBgColor(symbol);
+	const symbolColor = getSymbolColor(symbol);
+	const nepaliName = getSymbolName(symbol);
+	
 	return (
 		<Box
 			sx={{
 				display: "flex",
+				flexDirection: "column",
 				alignItems: "center",
-				mr: 2,
-				py: 0.5,
-				px: 1,
-				borderRadius: 1,
-				backgroundColor: "rgba(255, 255, 255, 0.05)",
+				p: 2,
+				backgroundColor: 'rgba(0, 0, 0, 0.2)',
+				border: "1px solid rgba(255, 255, 255, 0.1)",
+				borderRadius: 2,
+				position: "relative",
+				backdropFilter: "blur(8px)",
+				"&:hover": {
+					backgroundColor: 'rgba(255, 255, 255, 0.05)',
+				},
 			}}
 		>
-			<DiceSymbol symbol={symbol} size={30} />
-			<Typography variant="body2" sx={{ ml: 1, fontWeight: 500 }}>
-				× {count}
+			<Box
+				sx={{
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "center",
+					height: 60,
+					width: 60,
+				}}
+			>
+				<DiceSymbol 
+					symbol={symbol} 
+					size={60} 
+					traditional={false}
+					showLabel={false}
+				/>
+			</Box>
+			<Typography
+				variant="h6"
+				sx={{
+					mt: 1,
+					fontWeight: "bold",
+					color: symbolColor,
+					textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+				}}
+			>
+				{count}
+			</Typography>
+			<Typography
+				variant="caption"
+				sx={{
+					color: 'text.secondary',
+					fontWeight: "medium",
+					textTransform: "uppercase",
+					fontSize: "0.7rem",
+				}}
+			>
+				{nepaliName}
 			</Typography>
 		</Box>
 	);
@@ -37,6 +140,13 @@ const GameResults: React.FC = () => {
 		SymbolType,
 		number
 	>;
+	
+	// Initialize all symbols with 0 count
+	SYMBOLS.forEach(symbol => {
+		symbolCounts[symbol] = 0;
+	});
+	
+	// Update counts from actual results
 	diceResults.forEach((symbol) => {
 		symbolCounts[symbol] = (symbolCounts[symbol] || 0) + 1;
 	});
@@ -49,205 +159,85 @@ const GameResults: React.FC = () => {
 		});
 	}
 
-	const hasResults = diceResults.length > 0;
-
-	if (!hasResults) {
-		return null;
-	}
-
 	return (
-		<>
-			<Paper
-				elevation={8}
+		<Paper
+			elevation={8}
+			sx={{
+				p: 3,
+				borderRadius: 4,
+				background: "rgba(23, 33, 43, 0.8)",
+				backdropFilter: "blur(8px)",
+				border: "1px solid rgba(255, 255, 255, 0.1)",
+				boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2)",
+			}}
+		>
+			<Typography
+				variant="h5"
+				gutterBottom
 				sx={{
-					p: 3,
-					borderRadius: 4,
-					background: "rgba(23, 33, 43, 0.8)",
-					backdropFilter: "blur(8px)",
-					border: "1px solid rgba(255, 255, 255, 0.1)",
-					boxShadow:
-						"0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2)",
+					color: 'primary.main',
+					fontWeight: 600,
+					textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+					mb: 3,
+					position: 'relative',
+					display: 'inline-block',
+					'&::after': {
+						content: '""',
+						position: 'absolute',
+						left: 0,
+						bottom: -8,
+						width: '60%',
+						height: 3,
+						background: 'linear-gradient(90deg, #FFD700, transparent)',
+						borderRadius: 3,
+					}
+				}}
+			>
+				Roll Results
+			</Typography>
+
+			<Grid container spacing={2}>
+				{SYMBOLS.map((symbol) => (
+					<Grid item xs={6} sm={4} key={symbol}>
+						<SymbolCount
+							symbol={symbol}
+							count={symbolCounts[symbol]}
+						/>
+					</Grid>
+				))}
+			</Grid>
+
+			<Box
+				sx={{
+					mt: 3,
+					p: 2,
+					backgroundColor: totalWinnings > 0 
+						? 'rgba(76, 175, 80, 0.2)' 
+						: totalWinnings < 0 
+						? 'rgba(244, 67, 54, 0.2)' 
+						: 'rgba(117, 117, 117, 0.2)',
+					borderRadius: 2,
+					border: '1px solid rgba(255, 255, 255, 0.1)',
+					backdropFilter: 'blur(8px)',
 				}}
 			>
 				<Typography
-					variant="h5"
-					gutterBottom
+					variant="subtitle1"
 					sx={{
-						color: "primary.main",
-						fontWeight: 600,
-						textShadow: "0 2px 4px rgba(0,0,0,0.3)",
-						mb: 3,
-						position: "relative",
-						display: "inline-block",
-						"&::after": {
-							content: '""',
-							position: "absolute",
-							left: 0,
-							bottom: -8,
-							width: "60%",
-							height: 3,
-							background: "linear-gradient(90deg, #FFD700, transparent)",
-							borderRadius: 3,
-						},
+						fontWeight: "bold",
+						color: totalWinnings > 0 
+							? '#4CAF50' 
+							: totalWinnings < 0 
+							? '#f44336' 
+							: '#757575',
+						textAlign: "center",
+						textShadow: '0 1px 2px rgba(0,0,0,0.3)',
 					}}
 				>
-					Roll Results
+					Total Winnings: {totalWinnings > 0 ? "+" : ""}{totalWinnings}
 				</Typography>
-
-				<Box
-					sx={{
-						mb: 3,
-						p: 2,
-						borderRadius: 2,
-						background: "rgba(0, 0, 0, 0.2)",
-						backdropFilter: "blur(5px)",
-						border: "1px solid rgba(255, 255, 255, 0.05)",
-					}}
-				>
-					<Typography
-						variant="subtitle1"
-						sx={{
-							mb: 2,
-							fontWeight: 500,
-							display: "flex",
-							alignItems: "center",
-							"&::before": {
-								content: '""',
-								width: 4,
-								height: 16,
-								backgroundColor: "primary.main",
-								display: "inline-block",
-								marginRight: 1,
-								borderRadius: 1,
-							},
-						}}
-					>
-						Symbol Counts
-					</Typography>
-					<Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
-						{Object.entries(symbolCounts)
-							.sort(([, countA], [, countB]) => countB - countA)
-							.map(([symbol, count]) => (
-								<SymbolCount
-									key={symbol}
-									symbol={symbol as SymbolType}
-									count={count}
-								/>
-							))}
-					</Box>
-				</Box>
-
-				{playerId && payouts && payouts[playerId] && (
-					<Box
-						sx={{
-							p: 2,
-							borderRadius: 2,
-							background: "rgba(0, 0, 0, 0.2)",
-							backdropFilter: "blur(5px)",
-							border: "1px solid rgba(255, 255, 255, 0.05)",
-						}}
-					>
-						<Typography
-							variant="subtitle1"
-							sx={{
-								mb: 2,
-								fontWeight: 500,
-								display: "flex",
-								alignItems: "center",
-								"&::before": {
-									content: '""',
-									width: 4,
-									height: 16,
-									backgroundColor:
-										totalWinnings > 0
-											? "#4CAF50"
-											: totalWinnings < 0
-											? "#FF3D00"
-											: "primary.main",
-									display: "inline-block",
-									marginRight: 1,
-									borderRadius: 1,
-								},
-							}}
-						>
-							Your Results
-						</Typography>
-						<Grid container spacing={2} sx={{ mb: 2 }}>
-							{Object.entries(payouts[playerId])
-								.filter(([, amount]) => amount !== 0)
-								.map(([symbol, amount]) => (
-									<Grid item key={symbol} xs={6} sm={4}>
-										<Box
-											sx={{
-												display: "flex",
-												alignItems: "center",
-												py: 0.5,
-												px: 1,
-												borderRadius: 1,
-												backgroundColor:
-													amount > 0
-														? "rgba(76, 175, 80, 0.1)"
-														: "rgba(244, 67, 54, 0.1)",
-												border:
-													amount > 0
-														? "1px solid rgba(76, 175, 80, 0.2)"
-														: "1px solid rgba(244, 67, 54, 0.2)",
-											}}
-										>
-											<DiceSymbol symbol={symbol as SymbolType} size={24} />
-											<Typography
-												variant="body2"
-												sx={{
-													ml: 1,
-													fontWeight: 600,
-													color: amount > 0 ? "#4CAF50" : "#FF3D00",
-												}}
-											>
-												{amount > 0 ? `+$${amount}` : `-$${Math.abs(amount)}`}
-											</Typography>
-										</Box>
-									</Grid>
-								))}
-						</Grid>
-
-						<Divider
-							sx={{ my: 2, backgroundColor: "rgba(255, 255, 255, 0.05)" }}
-						/>
-
-						<Box
-							sx={{
-								display: "flex",
-								justifyContent: "space-between",
-								alignItems: "center",
-								py: 1,
-							}}
-						>
-							<Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
-								Total Result:
-							</Typography>
-							<Typography
-								variant="h6"
-								sx={{
-									fontWeight: "bold",
-									color:
-										totalWinnings > 0
-											? "#4CAF50"
-											: totalWinnings < 0
-											? "#FF3D00"
-											: "text.primary",
-								}}
-							>
-								{totalWinnings > 0
-									? `+$${totalWinnings}`
-									: totalWinnings < 0
-									? `-$${Math.abs(totalWinnings)}`
-									: `$0`}
-							</Typography>
-						</Box>
-					</Box>
-				)}
-			</Paper>
-		</>
+			</Box>
+		</Paper>
 	);
 };
 
