@@ -1,26 +1,6 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
-import { SymbolType } from '../context/GameContext';
-
-// Define symbol names in Nepali
-const getSymbolName = (symbol: SymbolType): string => {
-  switch (symbol) {
-    case 'Spade':
-      return 'Hukum';
-    case 'Heart':
-      return 'Paan';
-    case 'Diamond':
-      return 'Itta';
-    case 'Club':
-      return 'Chidi';
-    case 'Flag':
-      return 'Jhanda';
-    case 'Crown':
-      return 'Burja';
-    default:
-      return symbol;
-  }
-};
+import { SymbolType, NEPALI_SYMBOLS } from '../context/GameContext';
 
 // Define symbol colors and background colors for traditional wooden dice look
 const getSymbolStyle = (symbol: SymbolType) => {
@@ -105,7 +85,7 @@ const DiceSymbol: React.FC<DiceSymbolProps> = ({
   traditional = true,
 }) => {
   const symbolStyle = getSymbolStyle(symbol);
-  const symbolName = getSymbolName(symbol);
+  const symbolName = NEPALI_SYMBOLS[symbol];
   
   return (
     <Box

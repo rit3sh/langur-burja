@@ -401,6 +401,52 @@ io.on('connection', (socket) => {
       }
     }
   });
+
+  // Handle decreasing bets
+  socket.on('decreaseBet', ({ roomId, symbol, amount }) => {
+    if (!gameRooms[roomId] || gameRooms[roomId].gameState !== 'betting') {
+      socket.emit('error', { message: 'Cannot modify bet at this time' });
+      return;
+    }
+    
+    const room = gameRooms[roomId];
+    const player = room.players[socket.id];
+    
+    if (!player) {
+      socket.emit('error', { message: 'Player not found in this room' });
+      return;
+    }
+    
+    // Validate decrease amount
+    if (amount <= 0) {
+      socket.emit('error', { message: 'Invalid decrease amount' });
+      return;
+    }
+    
+    // Check if player has a bet on this symbol
+    const currentBet = room.bets[socket.id][symbol] || 0;
+    if (currentBet <= 0) {
+      socket.emit('error', { message: 'No bet to decrease' });
+      return;
+    }
+    
+    // Calculate how much to decrease
+    const decreaseAmount = Math.min(amount, currentBet);
+    
+    // Update player balance and bet
+    player.balance += decreaseAmount;
+    room.bets[socket.id][symbol] -= decreaseAmount;
+    
+    // Notify all players about the updated bet
+    io.to(roomId).emit('betPlaced', {
+      playerId: socket.id,
+      symbol,
+      amount: room.bets[socket.id][symbol],
+      playerBalance: player.balance
+    });
+    
+    console.log(`Player ${player.name} decreased bet by ${decreaseAmount} on ${symbol}`);
+  });
 });
 
 const PORT = process.env.PORT || 5000;

@@ -9,7 +9,7 @@ import {
   InputAdornment,
 } from '@mui/material';
 import { AttachMoney as MoneyIcon } from '@mui/icons-material';
-import { SYMBOLS, SymbolType, useGame } from '../context/GameContext';
+import { SYMBOLS, SymbolType, useGame, NEPALI_SYMBOLS } from '../context/GameContext';
 import DiceSymbol from './DiceSymbol';
 
 const BettingPanel: React.FC = () => {

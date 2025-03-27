@@ -5,6 +5,16 @@ import { useSocket } from './SocketContext';
 export type SymbolType = 'Spade' | 'Heart' | 'Diamond' | 'Club' | 'Flag' | 'Crown';
 export const SYMBOLS: SymbolType[] = ['Spade', 'Heart', 'Diamond', 'Club', 'Flag', 'Crown'];
 
+// Nepali names for symbols - for display purposes
+export const NEPALI_SYMBOLS: Record<SymbolType, string> = {
+  'Spade': 'Hukum',
+  'Heart': 'Paan',
+  'Diamond': 'Itta',
+  'Club': 'Chidi',
+  'Flag': 'Jhanda',
+  'Crown': 'Burja'
+};
+
 // Game states
 export type GameState = 'betting' | 'rolling' | 'results';
 
@@ -44,6 +54,7 @@ interface GameContextType {
   joinRoom: (roomId: string, playerName: string) => void;
   leaveRoom: () => void;
   placeBet: (symbol: SymbolType, amount: number) => void;
+  decreaseBet: (symbol: SymbolType, amount: number) => void;
   rollDice: () => void;
   setPlayerName: (name: string) => void;
 }
@@ -62,6 +73,7 @@ const GameContext = createContext<GameContextType>({
   joinRoom: () => {},
   leaveRoom: () => {},
   placeBet: () => {},
+  decreaseBet: () => {},
   rollDice: () => {},
   setPlayerName: () => {},
 });
@@ -264,6 +276,45 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     socket.emit('placeBet', { roomId, symbol, amount });
   };
 
+  // New function to handle decreasing bets
+  const decreaseBet = (symbol: SymbolType, amount: number) => {
+    if (!socket || !roomId || !playerId) return;
+    
+    // Get current bet amount for this symbol
+    const currentBet = bets[playerId]?.[symbol] || 0;
+    
+    if (currentBet <= 0) return; // No bet to decrease
+    
+    // Calculate the new bet amount after decreasing
+    const decreaseAmount = Math.min(amount, currentBet);
+    
+    // Update local state immediately for responsive UI
+    setBets(prev => {
+      const newBets = { ...prev };
+      if (!newBets[playerId]) {
+        newBets[playerId] = {};
+      }
+      newBets[playerId][symbol] = currentBet - decreaseAmount;
+      return newBets;
+    });
+    
+    // Update player balance
+    setPlayers(prev => {
+      if (!prev[playerId]) return prev;
+      
+      return {
+        ...prev,
+        [playerId]: {
+          ...prev[playerId],
+          balance: prev[playerId].balance + decreaseAmount
+        }
+      };
+    });
+    
+    // Send update to server
+    socket.emit('decreaseBet', { roomId, symbol, amount: decreaseAmount });
+  };
+
   const rollDice = () => {
     if (!socket || !roomId) return;
     
@@ -286,6 +337,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         joinRoom,
         leaveRoom,
         placeBet,
+        decreaseBet,
         rollDice,
         setPlayerName,
       }}

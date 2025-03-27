@@ -1,7 +1,6 @@
 import React from "react";
 import { Box, Container, Grid, Paper, Typography, Alert } from "@mui/material";
 import { useGame } from "../context/GameContext";
-import BettingPanel from "./BettingPanel";
 import Dice from "./Dice";
 import PlayerList from "./PlayerList";
 import GameControls from "./GameControls";
@@ -81,9 +80,24 @@ const Game: React.FC = () => {
 				)}
 
 				<Grid container spacing={4}>
-					{/* Left Column - Game Controls & Player List */}
-					<Grid item xs={12} md={4}>
-						<Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
+					{/* Betting Panel (Results) */}
+					<Grid item xs={12}>
+						<GameResults />
+					</Grid>
+					
+
+					
+					{/* Game Controls & Player List */}
+					<Grid item xs={12}>
+						<Box 
+							sx={{ 
+								display: "flex", 
+								gap: 4,
+								"@media (max-width: 600px)": {
+									flexDirection: "column"
+								}
+							}}
+						>
 							<Paper
 								elevation={8}
 								sx={{
@@ -94,6 +108,7 @@ const Game: React.FC = () => {
 									border: "1px solid rgba(255, 255, 255, 0.1)",
 									boxShadow:
 										"0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2)",
+									flex: "1 1 50%",
 								}}
 							>
 								<GameControls />
@@ -109,115 +124,12 @@ const Game: React.FC = () => {
 									border: "1px solid rgba(255, 255, 255, 0.1)",
 									boxShadow:
 										"0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2)",
+									flex: "1 1 50%",
 								}}
 							>
 								<PlayerList />
 							</Paper>
 						</Box>
-					</Grid>
-
-					{/* Middle Column - Dice & Results */}
-					<Grid item xs={12} md={4}>
-						<Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
-							<Paper
-								elevation={8}
-								sx={{
-									p: 3,
-									borderRadius: 4,
-									background: "rgba(23, 33, 43, 0.8)",
-									backdropFilter: "blur(8px)",
-									border: "1px solid rgba(255, 255, 255, 0.1)",
-									boxShadow:
-										"0 15px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2)",
-									display: "flex",
-									flexDirection: "column",
-									alignItems: "center",
-									minHeight: 320,
-									justifyContent: "center",
-									position: "relative",
-									overflow: "hidden",
-									"&::after": {
-										content: '""',
-										position: "absolute",
-										top: 0,
-										left: 0,
-										right: 0,
-										height: "5px",
-										background:
-											"linear-gradient(90deg, #FFD700, #FFA500, #FF8C00, #FF7F50, #FF6347)",
-										animation: "shine 3s linear infinite",
-										backgroundSize: "200% 100%",
-									},
-								}}
-							>
-								<Typography
-									variant="h5"
-									gutterBottom
-									align="center"
-									sx={{
-										fontWeight: 600,
-										color: "#FFD700",
-										mb: 3,
-										textShadow: "0 2px 4px rgba(0,0,0,0.3)",
-									}}
-								>
-									Dice
-								</Typography>
-
-								<Dice diceResults={diceResults} rolling={isRolling} />
-
-								{isRolling && (
-									<Typography
-										variant="body1"
-										align="center"
-										sx={{
-											mt: 2,
-											color: "#F8F9FA",
-											fontWeight: 500,
-											animation: "pulse 1s infinite",
-										}}
-									>
-										Rolling dice...
-									</Typography>
-								)}
-
-								{diceResults.length === 0 && !isRolling && (
-									<Typography
-										variant="body2"
-										color="text.secondary"
-										align="center"
-										sx={{
-											mt: 2,
-											color: "rgba(255,255,255,0.7)",
-											fontStyle: "italic",
-										}}
-									>
-										Place your bets and roll the dice to start the game.
-									</Typography>
-								)}
-							</Paper>
-
-							<GameResults />
-						</Box>
-					</Grid>
-
-					{/* Right Column - Betting Panel */}
-					<Grid item xs={12} md={4}>
-						<Paper
-							elevation={8}
-							sx={{
-								p: 3,
-								borderRadius: 4,
-								background: "rgba(23, 33, 43, 0.8)",
-								backdropFilter: "blur(8px)",
-								border: "1px solid rgba(255, 255, 255, 0.1)",
-								boxShadow:
-									"0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2)",
-								height: "100%",
-							}}
-						>
-							<BettingPanel />
-						</Paper>
 					</Grid>
 				</Grid>
 			</Container>

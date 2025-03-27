@@ -230,7 +230,7 @@ const GameLobby: React.FC = () => {
             fullWidth
             size="large"
             onClick={handleCreateRoom}
-            disabled={!name || !isConnected || isJoining}
+
           >
             Create New Game
           </Button>
