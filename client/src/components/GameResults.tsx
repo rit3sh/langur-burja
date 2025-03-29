@@ -7,9 +7,15 @@ import {
 	TextField,
 	Button,
 	InputAdornment,
+	Badge,
 } from "@mui/material";
 import { AttachMoney as MoneyIcon } from "@mui/icons-material";
-import { SymbolType, useGame, SYMBOLS, NEPALI_SYMBOLS } from "../context/GameContext";
+import {
+	SymbolType,
+	useGame,
+	SYMBOLS,
+	NEPALI_SYMBOLS,
+} from "../context/GameContext";
 import DiceSymbol from "./DiceSymbol";
 
 // Define background colors for each symbol
@@ -58,9 +64,22 @@ interface SymbolCountProps {
 	currentBetAmount: string;
 }
 
-const SymbolCount: React.FC<SymbolCountProps> = ({ symbol, count, currentBetAmount }) => {
-	const { placeBet, decreaseBet, gameState, players, playerId, bets, diceResults } = useGame();
-	const playerBalance = playerId && players[playerId] ? players[playerId].balance : 0;
+const SymbolCount: React.FC<SymbolCountProps> = ({
+	symbol,
+	count,
+	currentBetAmount,
+}) => {
+	const {
+		placeBet,
+		decreaseBet,
+		gameState,
+		players,
+		playerId,
+		bets,
+		diceResults,
+	} = useGame();
+	const playerBalance =
+		playerId && players[playerId] ? players[playerId].balance : 0;
 	const playerBets = playerId && bets[playerId] ? bets[playerId] : {};
 	const isBettingDisabled = gameState !== "betting";
 	const hasRolled = diceResults && diceResults.length > 0;
@@ -77,9 +96,9 @@ const SymbolCount: React.FC<SymbolCountProps> = ({ symbol, count, currentBetAmou
 
 	const handleDecreaseBet = (e: React.MouseEvent) => {
 		e.stopPropagation(); // Prevent the box click event from firing
-		
+
 		if (isBettingDisabled || !hasBet) return;
-		
+
 		// Get decrease amount from current bet amount input
 		let decreaseAmount = 10; // Default
 		if (currentBetAmount && /^\d+$/.test(currentBetAmount)) {
@@ -88,7 +107,7 @@ const SymbolCount: React.FC<SymbolCountProps> = ({ symbol, count, currentBetAmou
 				decreaseAmount = 10;
 			}
 		}
-		
+
 		decreaseBet(symbol, decreaseAmount);
 	};
 
@@ -104,59 +123,45 @@ const SymbolCount: React.FC<SymbolCountProps> = ({ symbol, count, currentBetAmou
 				flexDirection: "column",
 				alignItems: "center",
 				p: 2,
-				backgroundColor: "rgba(0, 0, 0, 0.2)",
-				border: hasBet
-					? "1px solid rgba(255, 215, 0, 0.5)"
-					: "1px solid rgba(255, 255, 255, 0.1)",
+				backgroundColor: "rgb(254, 247, 255)",
 				borderRadius: 2,
 				position: "relative",
 				backdropFilter: "blur(8px)",
 				cursor: isBettingDisabled ? "default" : "pointer",
 				transition: "all 0.2s ease",
 				"&:hover": {
-					backgroundColor: isBettingDisabled
-						? "rgba(0, 0, 0, 0.2)"
-						: "rgba(255, 255, 255, 0.05)",
-					transform: isBettingDisabled ? "none" : "translateY(-2px)",
+					backgroundColor: "rgb(254, 247, 255)",
+					transform: isBettingDisabled ? "none" : "translateY(-5px)",
+					boxShadow:
+						"0 0 10px rgba(255, 215, 0, 0.7), 0 0 20px rgba(255, 215, 0, 0.5)",
 				},
 			}}
 		>
-			<Box
-				sx={{
-					display: "flex",
-					alignItems: "center",
-					justifyContent: "center",
-					height: 60,
-					width: 60,
+			<DiceSymbol
+				symbol={symbol}
+				size={185}
+				traditional={false}
+				showLabel={false}
+			/>
+
+			<Badge
+				badgeContent={count}
+				color="primary"
+				anchorOrigin={{
+					vertical: "top",
+					horizontal: "right",
 				}}
 			>
-				<DiceSymbol
-					symbol={symbol}
-					size={60}
-					traditional={false}
-					showLabel={false}
-				/>
-			</Box>
-			{hasRolled && count > 0 && (
-				<Typography
-					variant="h6"
-					sx={{
-						mt: 1,
-						fontWeight: "bold",
-						color: symbolColor,
-						textShadow: "0 2px 4px rgba(0,0,0,0.3)",
-					}}
-				>
-					{count}
-				</Typography>
-			)}
+				{count}
+			</Badge>
+
 			<Typography
 				variant="caption"
 				sx={{
-					color: "text.secondary",
-					fontWeight: "medium",
+					color: "black",
+					fontWeight: "bold",
 					textTransform: "uppercase",
-					fontSize: "0.7rem",
+					fontSize: "1rem",
 					mt: hasRolled && count > 0 ? 0 : 1,
 				}}
 			>
@@ -169,9 +174,9 @@ const SymbolCount: React.FC<SymbolCountProps> = ({ symbol, count, currentBetAmou
 						position: "absolute",
 						top: -8,
 						right: -8,
-						fontSize: "0.7rem",
-						backgroundColor: "rgba(76, 175, 80, 0.2)",
-						color: "#4CAF50",
+						fontSize: "1rem",
+						backgroundColor: "rgba(76, 175, 79, 0.87)",
+						color: "white",
 						border: "1px solid rgba(76, 175, 80, 0.5)",
 						fontWeight: "bold",
 						borderRadius: "10px",
@@ -182,14 +187,16 @@ const SymbolCount: React.FC<SymbolCountProps> = ({ symbol, count, currentBetAmou
 						cursor: isBettingDisabled ? "default" : "pointer",
 						transition: "all 0.2s ease",
 						"&:hover": {
-							backgroundColor: isBettingDisabled ? "rgba(76, 175, 80, 0.2)" : "rgba(76, 175, 80, 0.3)",
+							backgroundColor: isBettingDisabled
+								? "rgba(76, 175, 80, 0.2)"
+								: "rgba(76, 175, 80, 0.3)",
 							transform: isBettingDisabled ? "none" : "scale(1.1)",
 						},
 					}}
 				>
 					${playerBets[symbol]}
 				</Box>
-			): null}
+			) : null}
 		</Box>
 	);
 };
@@ -199,10 +206,13 @@ const GameResults: React.FC = () => {
 	const [betAmount, setBetAmount] = useState<string>("10");
 	const [globalBetAmount, setGlobalBetAmount] = useState<string>("10");
 
-	const playerBalance = playerId && players[playerId] ? players[playerId].balance : 0;
+	const playerBalance =
+		playerId && players[playerId] ? players[playerId].balance : 0;
 	const isBettingDisabled = gameState !== "betting";
 
-	const handleBetAmountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+	const handleBetAmountChange = (
+		event: React.ChangeEvent<HTMLInputElement>
+	) => {
 		// Only allow positive numbers
 		const value = event.target.value;
 		if (/^\d*$/.test(value)) {
@@ -247,66 +257,25 @@ const GameResults: React.FC = () => {
 				background: "rgba(23, 33, 43, 0.8)",
 				backdropFilter: "blur(8px)",
 				border: "1px solid rgba(255, 255, 255, 0.1)",
-				boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2)",
+				boxShadow:
+					"0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2)",
 			}}
 		>
-			{/* Header */}
-			<Box 
-				sx={{ 
-					width: '100%',
-					textAlign: 'center',
-					position: 'relative',
-					mb: 4,
-					display: 'flex',
-					justifyContent: 'space-between',
-					alignItems: 'center',
-					'&::after': {
-						content: '""',
-						position: 'absolute',
-						bottom: -10,
-						left: '50%',
-						transform: 'translateX(-50%)',
-						width: '100%',
-						height: '2px',
-						background: 'linear-gradient(90deg, transparent, #FFD700 25%, #FFD700 75%, transparent)',
-					}
-				}}
-			>
-				<Typography
-					variant="h5"
-					component="span"
-					sx={{
-						color: "primary.main",
-						fontWeight: 600,
-						textShadow: "0 2px 4px rgba(0,0,0,0.3)",
-					}}
-				>
-					Place Your Bets
-				</Typography>
-				<Typography
-					component="span"
-					sx={{
-						color: "#4CAF50",
-						fontWeight: "bold",
-					}}
-				>
-					${playerBalance}
-				</Typography>
-			</Box>
-
 			{/* Bet Amount Input */}
-			<Box 
-				sx={{ 
-					display: 'flex',
-					alignItems: 'center',
-					justifyContent: 'center',
+			<Box
+				sx={{
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "center",
 					gap: 2,
 					mb: 4,
-					px: 4
+					px: 4,
 				}}
 			>
-				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-					<Typography sx={{ color: '#4CAF50', fontWeight: 'medium' }}>$</Typography>
+				<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+					<Typography sx={{ color: "#4CAF50", fontWeight: "medium" }}>
+						$
+					</Typography>
 					<TextField
 						variant="outlined"
 						size="small"
@@ -314,21 +283,21 @@ const GameResults: React.FC = () => {
 						onChange={handleBetAmountChange}
 						disabled={isBettingDisabled}
 						sx={{
-							width: '120px',
-							'& .MuiOutlinedInput-root': {
-								backgroundColor: 'rgba(0, 0, 0, 0.2)',
+							width: "120px",
+							"& .MuiOutlinedInput-root": {
+								backgroundColor: "rgba(0, 0, 0, 0.2)",
 								borderRadius: 1,
-								'& fieldset': {
-									borderColor: 'rgba(255, 255, 255, 0.1)',
+								"& fieldset": {
+									borderColor: "rgba(255, 255, 255, 0.1)",
 								},
-								'&:hover fieldset': {
-									borderColor: 'rgba(255, 215, 0, 0.5)',
+								"&:hover fieldset": {
+									borderColor: "rgba(255, 215, 0, 0.5)",
 								},
-								'& input': {
-									color: '#fff',
-									textAlign: 'center',
-									fontWeight: 'bold',
-									padding: '8px 12px',
+								"& input": {
+									color: "#fff",
+									textAlign: "center",
+									fontWeight: "bold",
+									padding: "8px 12px",
 								},
 							},
 						}}
@@ -339,16 +308,17 @@ const GameResults: React.FC = () => {
 					onClick={handleSetAmount}
 					disabled={isBettingDisabled}
 					sx={{
-						backgroundColor: '#4CAF50',
-						color: '#000',
-						'&:hover': {
-							backgroundColor: '#45a049',
+						backgroundColor: "#4CAF50",
+						color: "#000",
+						"&:hover": {
+							backgroundColor: "#45a049",
 						},
-						'&.Mui-disabled': {
-							backgroundColor: 'rgba(255, 255, 255, 0.1)',
+						"&.Mui-disabled": {
+							backgroundColor: "rgba(255, 255, 255, 0.1)",
+							color: "#000 !important",
 						},
-						minWidth: '100px',
-						fontWeight: 'bold',
+						minWidth: "100px",
+						fontWeight: "bold",
 					}}
 				>
 					Set Amount
@@ -359,9 +329,9 @@ const GameResults: React.FC = () => {
 			<Grid container spacing={2}>
 				{SYMBOLS.map((symbol) => (
 					<Grid item xs={6} sm={4} key={symbol}>
-						<SymbolCount 
-							symbol={symbol} 
-							count={symbolCounts[symbol]} 
+						<SymbolCount
+							symbol={symbol}
+							count={symbolCounts[symbol]}
 							currentBetAmount={globalBetAmount}
 						/>
 					</Grid>
@@ -374,30 +344,33 @@ const GameResults: React.FC = () => {
 					sx={{
 						mt: 3,
 						p: 2,
-						backgroundColor: totalWinnings > 0 
-							? 'rgba(76, 175, 80, 0.2)' 
-							: totalWinnings < 0 
-							? 'rgba(244, 67, 54, 0.2)' 
-							: 'rgba(117, 117, 117, 0.2)',
+						backgroundColor:
+							totalWinnings > 0
+								? "rgba(76, 175, 80, 0.2)"
+								: totalWinnings < 0
+								? "rgba(244, 67, 54, 0.2)"
+								: "rgba(117, 117, 117, 0.2)",
 						borderRadius: 2,
-						border: '1px solid rgba(255, 255, 255, 0.1)',
-						backdropFilter: 'blur(8px)',
+						border: "1px solid rgba(255, 255, 255, 0.1)",
+						backdropFilter: "blur(8px)",
 					}}
 				>
 					<Typography
 						variant="subtitle1"
 						sx={{
 							fontWeight: "bold",
-							color: totalWinnings > 0 
-								? '#4CAF50' 
-								: totalWinnings < 0 
-								? '#f44336' 
-								: '#757575',
+							color:
+								totalWinnings > 0
+									? "#4CAF50"
+									: totalWinnings < 0
+									? "#f44336"
+									: "#757575",
 							textAlign: "center",
-							textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+							textShadow: "0 1px 2px rgba(0,0,0,0.3)",
 						}}
 					>
-						Total Winnings: {totalWinnings > 0 ? "+" : ""}{totalWinnings}
+						Total Winnings: {totalWinnings > 0 ? "+" : ""}
+						{totalWinnings}
 					</Typography>
 				</Box>
 			)}

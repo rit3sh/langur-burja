@@ -158,7 +158,7 @@ const GameLobby: React.FC = () => {
       >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h4" component="h1" gutterBottom>
-            Langur Burja Game
+          Langur Burja (लङ्गुर बुर्जा)
           </Typography>
           <IconButton 
             onClick={() => setShowDebug(!showDebug)}
@@ -170,8 +170,8 @@ const GameLobby: React.FC = () => {
           </IconButton>
         </Box>
         
-        <Typography variant="body1" gutterBottom align="center" sx={{ mb: 3 }}>
-          A traditional dice game with Spade, Heart, Diamond, Club, Flag, and Crown
+        <Typography fontSize={12} variant="body1" gutterBottom align="center" sx={{ mb: 3 }}>
+          A traditional dice game with पान (Spade), रातो (Heart), इँटा (Diamond), चिरी (Club), झण्डा (Flag), and मुकुट (Crown)
         </Typography>
         
         <Collapse in={showDebug}>

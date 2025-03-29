@@ -2,6 +2,26 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { SymbolType, NEPALI_SYMBOLS } from '../context/GameContext';
 
+// Map symbols to their image file names
+const getSymbolImage = (symbol: SymbolType): string => {
+  switch (symbol) {
+    case 'Spade':
+      return '/images/surot.png';
+    case 'Heart':
+      return '/images/paan.png';
+    case 'Diamond':
+      return '/images/itta.png';
+    case 'Club':
+      return '/images/chidi.png';
+    case 'Flag':
+      return '/images/jhanda.png';
+    case 'Crown':
+      return '/images/burja.png';
+    default:
+      return '';
+  }
+};
+
 // Define symbol colors and background colors for traditional wooden dice look
 const getSymbolStyle = (symbol: SymbolType) => {
   const woodBgBase = 'linear-gradient(135deg, #d7b889 0%, #c4a472 100%)';
@@ -86,6 +106,7 @@ const DiceSymbol: React.FC<DiceSymbolProps> = ({
 }) => {
   const symbolStyle = getSymbolStyle(symbol);
   const symbolName = NEPALI_SYMBOLS[symbol];
+  const symbolImage = getSymbolImage(symbol);
   
   return (
     <Box
@@ -153,28 +174,43 @@ const DiceSymbol: React.FC<DiceSymbolProps> = ({
           })
         }}
       >
-        {/* The actual symbol */}
-        <Typography
-          variant="h4"
-          sx={{
-            fontSize: traditional ? size * 0.6 : size * 0.9,
-            fontWeight: 'bold',
-            color: symbolStyle.color,
-            ...(traditional ? {
-              textShadow: symbolStyle.textShadow,
-              WebkitTextStroke: '1px rgba(0, 0, 0, 0.3)',
-              background: 'rgba(0, 0, 0, 0.2)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              filter: 'drop-shadow(0 1px 1px rgba(255,255,255,0.5))',
-            } : {
-              // Non-traditional simple symbol style
-              textShadow: 'none',
-            })
-          }}
-        >
-          {symbolStyle.symbol}
-        </Typography>
+        {/* Use image instead of Typography for the symbol */}
+        {symbolImage ? (
+          <Box
+            component="img"
+            src={symbolImage}
+            alt={symbolName}
+            sx={{
+              width: traditional ? size * 0.6 : size * 0.8,
+              height: 'auto',
+              objectFit: 'contain',
+              filter: traditional ? 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' : 'none',
+              opacity: traditional ? 0.9 : 1,
+            }}
+          />
+        ) : (
+          <Typography
+            variant="h4"
+            sx={{
+              fontSize: traditional ? size * 0.6 : size * 0.9,
+              fontWeight: 'bold',
+              color: symbolStyle.color,
+              ...(traditional ? {
+                textShadow: symbolStyle.textShadow,
+                WebkitTextStroke: '1px rgba(0, 0, 0, 0.3)',
+                background: 'rgba(0, 0, 0, 0.2)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                filter: 'drop-shadow(0 1px 1px rgba(255,255,255,0.5))',
+              } : {
+                // Non-traditional simple symbol style
+                textShadow: 'none',
+              })
+            }}
+          >
+            {symbolStyle.symbol}
+          </Typography>
+        )}
       </Box>
       
       {/* Optional label */}

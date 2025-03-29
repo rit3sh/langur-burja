@@ -63,7 +63,7 @@ const Game: React.FC = () => {
 						fontFamily: '"Poppins", sans-serif',
 					}}
 				>
-					Langur Burja
+					लङ्गुर बुर्जा
 				</Typography>
 
 				{error && (
