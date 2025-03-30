@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useSocket } from "./SocketContext";
 
+// Check if we're running in a browser environment
+const isBrowser = typeof window !== 'undefined';
+
 // Symbol types
 export type SymbolType =
 	| "Spade"
@@ -69,6 +72,7 @@ interface GameContextType {
 	placeBet: (symbol: SymbolType, amount: number) => void;
 	decreaseBet: (symbol: SymbolType, amount: number) => void;
 	rollDice: () => void;
+	startNewRound: (forceReset?: boolean) => void;
 	setPlayerName: (name: string) => void;
 }
 
@@ -88,6 +92,7 @@ const GameContext = createContext<GameContextType>({
 	placeBet: () => {},
 	decreaseBet: () => {},
 	rollDice: () => {},
+	startNewRound: () => {},
 	setPlayerName: () => {},
 });
 
@@ -98,6 +103,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
 	const { socket, isConnected } = useSocket();
 
+	// Initialize with null/empty values for SSR
 	const [roomId, setRoomId] = useState<string | null>(null);
 	const [players, setPlayers] = useState<Record<string, Player>>({});
 	const [bets, setBets] = useState<Bets>({});
@@ -109,6 +115,52 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
 	const [error, setError] = useState<string | null>(null);
 	const [attemptingJoin, setAttemptingJoin] = useState<boolean>(false);
 	const [attemptedRoomId, setAttemptedRoomId] = useState<string | null>(null);
+
+	// Initialize from localStorage on client-side only to prevent hydration mismatch
+	useEffect(() => {
+		if (isBrowser) {
+			const storedRoomId = localStorage.getItem('gameRoomId');
+			const storedPlayerName = localStorage.getItem('playerName') || "";
+			
+			if (storedRoomId) {
+				setRoomId(storedRoomId);
+			}
+			
+			if (storedPlayerName) {
+				setPlayerName(storedPlayerName);
+			}
+		}
+	}, []);
+
+	// Persist roomId to localStorage when it changes
+	useEffect(() => {
+		if (!isBrowser) return;
+		
+		if (roomId) {
+			localStorage.setItem('gameRoomId', roomId);
+		} else {
+			localStorage.removeItem('gameRoomId');
+		}
+	}, [roomId]);
+
+	// Persist playerName to localStorage when it changes
+	useEffect(() => {
+		if (!isBrowser) return;
+		
+		if (playerName) {
+			localStorage.setItem('playerName', playerName);
+		} else {
+			localStorage.removeItem('playerName');
+		}
+	}, [playerName]);
+
+	// Auto-rejoin room on page refresh
+	useEffect(() => {
+		if (socket && isConnected && roomId && playerName && !attemptingJoin) {
+			console.log("Auto-rejoining room:", roomId, "with name:", playerName);
+			joinRoom(roomId, playerName);
+		}
+	}, [socket, isConnected]);
 
 	useEffect(() => {
 		if (!socket) return;
@@ -286,6 +338,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
 		setDiceResults([]);
 		setGameState("betting");
 		setPayouts(null);
+		
+		// Clear stored room data
+		if (isBrowser) {
+			localStorage.removeItem('gameRoomId');
+		}
 	};
 
 	const placeBet = (symbol: SymbolType, amount: number) => {
@@ -339,6 +396,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
 		socket.emit("rollDice", { roomId });
 	};
 
+	const startNewRound = (forceReset = false) => {
+		if (!socket || !roomId) return;
+
+		socket.emit("startNewRound", { roomId, forceReset });
+	};
+
 	return (
 		<GameContext.Provider
 			value={{
@@ -357,6 +420,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
 				placeBet,
 				decreaseBet,
 				rollDice,
+				startNewRound,
 				setPlayerName,
 			}}
 		>

@@ -63,7 +63,7 @@ const Game: React.FC = () => {
 						fontFamily: '"Poppins", sans-serif',
 					}}
 				>
-					लङ्गुर बुर्जा
+					Langur Burja
 				</Typography>
 
 				{error && (
@@ -80,24 +80,8 @@ const Game: React.FC = () => {
 				)}
 
 				<Grid container spacing={4}>
-					{/* Betting Panel (Results) */}
-					<Grid item xs={12}>
-						<GameResults />
-					</Grid>
-					
-
-					
-					{/* Game Controls & Player List */}
-					<Grid item xs={12}>
-						<Box 
-							sx={{ 
-								display: "flex", 
-								gap: 4,
-								"@media (max-width: 600px)": {
-									flexDirection: "column"
-								}
-							}}
-						>
+					<Grid item xs={4} md={4}>
+						<Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
 							<Paper
 								elevation={8}
 								sx={{
@@ -108,7 +92,6 @@ const Game: React.FC = () => {
 									border: "1px solid rgba(255, 255, 255, 0.1)",
 									boxShadow:
 										"0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2)",
-									flex: "1 1 50%",
 								}}
 							>
 								<GameControls />
@@ -124,11 +107,15 @@ const Game: React.FC = () => {
 									border: "1px solid rgba(255, 255, 255, 0.1)",
 									boxShadow:
 										"0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2)",
-									flex: "1 1 50%",
 								}}
 							>
 								<PlayerList />
 							</Paper>
+						</Box>
+					</Grid>
+					<Grid item xs={8} md={8}>
+						<Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
+							<GameResults />
 						</Box>
 					</Grid>
 				</Grid>

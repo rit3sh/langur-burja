@@ -10,6 +10,7 @@ import {
   CircularProgress,
   IconButton,
   Collapse,
+  Card,
 } from '@mui/material';
 import BugReportIcon from '@mui/icons-material/BugReport';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -17,10 +18,14 @@ import { useGame } from '../context/GameContext';
 import { useSocket } from '../context/SocketContext';
 import ServerStatus from './ServerStatus';
 
+// Check if we're running in a browser environment
+const isBrowser = typeof window !== 'undefined';
+
 const GameLobby: React.FC = () => {
   const { createRoom, joinRoom, error: gameError, setPlayerName, roomId: gameRoomId } = useGame();
   const { isConnected, connectionError, socket } = useSocket();
   
+  // Initialize with empty values for SSR
   const [name, setName] = useState<string>('');
   const [roomId, setRoomId] = useState<string>('');
   const [isJoining, setIsJoining] = useState(false);
@@ -28,6 +33,23 @@ const GameLobby: React.FC = () => {
   const [showDebug, setShowDebug] = useState(false);
   const [joinTimeout, setJoinTimeout] = useState<NodeJS.Timeout | null>(null);
   const [socketId, setSocketId] = useState<string | null>(null);
+  const [savedRoomId, setSavedRoomId] = useState<string | null>(null);
+  
+  // Initialize from localStorage after component mounts on client-side
+  useEffect(() => {
+    if (isBrowser) {
+      const storedName = localStorage.getItem('playerName') || '';
+      const storedRoomId = localStorage.getItem('gameRoomId');
+      
+      setName(storedName);
+      setSavedRoomId(storedRoomId);
+      
+      // Also set the name in the context
+      if (storedName) {
+        setPlayerName(storedName);
+      }
+    }
+  }, []);
   
   // Update socket ID for debugging
   useEffect(() => {
@@ -123,6 +145,27 @@ const GameLobby: React.FC = () => {
     
     setJoinTimeout(timeoutId);
   };
+
+  const handleRejoinSavedRoom = () => {
+    if (!name || !savedRoomId) return;
+    
+    setIsJoining(true);
+    setJoinError(null);
+    joinRoom(savedRoomId, name);
+    
+    // Set a timeout to detect if joining fails
+    const timeoutId = setTimeout(() => {
+      setIsJoining(false);
+      setJoinError('Rejoining room timed out. The room might no longer exist.');
+      // Clear saved room if it no longer exists
+      if (isBrowser) {
+        localStorage.removeItem('gameRoomId');
+      }
+      setSavedRoomId(null);
+    }, 10000);
+    
+    setJoinTimeout(timeoutId);
+  };
   
   const resetAndRetry = () => {
     // Clear any errors and joining state
@@ -133,6 +176,13 @@ const GameLobby: React.FC = () => {
       clearTimeout(joinTimeout);
       setJoinTimeout(null);
     }
+  };
+  
+  const clearSavedRoom = () => {
+    if (isBrowser) {
+      localStorage.removeItem('gameRoomId');
+    }
+    setSavedRoomId(null);
   };
   
   return (
@@ -207,9 +257,47 @@ const GameLobby: React.FC = () => {
           <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
             <CircularProgress size={30} />
             <Typography variant="body1" sx={{ ml: 2 }}>
-              {roomId ? `Joining room ${roomId}...` : 'Creating new room...'}
+              {roomId ? `Joining room ${roomId}...` : savedRoomId ? `Rejoining previous game...` : 'Creating new room...'}
             </Typography>
           </Box>
+        )}
+        
+        {/* Previously saved room card */}
+        {savedRoomId && !isJoining && !gameRoomId && (
+          <Card 
+            sx={{ 
+              mb: 3, 
+              p: 2, 
+              border: '1px solid rgba(255, 215, 0, 0.5)',
+              background: 'rgba(255, 215, 0, 0.05)'
+            }}
+          >
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              You have a saved game session. Would you like to rejoin?
+            </Typography>
+            <Typography variant="caption" sx={{ mb: 2, display: 'block', color: 'text.secondary' }}>
+              Room ID: {savedRoomId}
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Button 
+                variant="contained" 
+                color="primary" 
+                onClick={handleRejoinSavedRoom}
+                disabled={!isConnected || !name}
+                sx={{ flexGrow: 1 }}
+              >
+                Rejoin Game
+              </Button>
+              <Button 
+                variant="outlined" 
+                color="error" 
+                onClick={clearSavedRoom}
+                sx={{ flexGrow: 0 }}
+              >
+                Clear
+              </Button>
+            </Box>
+          </Card>
         )}
         
         <TextField
@@ -230,7 +318,7 @@ const GameLobby: React.FC = () => {
             fullWidth
             size="large"
             onClick={handleCreateRoom}
-
+            disabled={!isConnected || !name || isJoining}
           >
             Create New Game
           </Button>

@@ -333,6 +333,9 @@ io.on('connection', (socket) => {
       room.diceResults = rollDice();
       room.gameState = 'results';
       
+      // Notify clients about the state change to results
+      io.to(roomId).emit('gameStateChanged', { gameState: 'results' });
+      
       // Calculate payouts
       const payouts = calculatePayouts(room.bets, room.diceResults);
       
@@ -353,23 +356,8 @@ io.on('connection', (socket) => {
         players: room.players
       });
       
-      // Reset for next round after delay
-      setTimeout(() => {
-        // Clear previous bets
-        Object.keys(room.bets).forEach(playerId => {
-          SYMBOLS.forEach(symbol => {
-            room.bets[playerId][symbol] = 0;
-          });
-        });
-        
-        room.diceResults = [];
-        room.gameState = 'betting';
-        
-        io.to(roomId).emit('newRound', {
-          gameState: 'betting',
-          bets: room.bets
-        });
-      }, 5000);
+      // No longer automatically reset for next round
+      // Keep the game in the "results" state until player clicks "New Game"
     }, 3000);
   });
   
@@ -446,6 +434,39 @@ io.on('connection', (socket) => {
     });
     
     console.log(`Player ${player.name} decreased bet by ${decreaseAmount} on ${symbol}`);
+  });
+
+  // Handle starting a new round
+  socket.on('startNewRound', ({ roomId, forceReset }) => {
+    if (!gameRooms[roomId]) {
+      socket.emit('error', { message: 'Room not found' });
+      return;
+    }
+    
+    const room = gameRooms[roomId];
+    
+    // Check if game state allows starting a new round
+    if (room.gameState !== 'results' && !forceReset) {
+      socket.emit('error', { message: 'Cannot start a new round at this time. Use force reset if the game is stuck.' });
+      return;
+    }
+    
+    // Clear previous bets
+    Object.keys(room.bets).forEach(playerId => {
+      SYMBOLS.forEach(symbol => {
+        room.bets[playerId][symbol] = 0;
+      });
+    });
+    
+    room.diceResults = [];
+    room.gameState = 'betting';
+    
+    io.to(roomId).emit('newRound', {
+      gameState: 'betting',
+      bets: room.bets
+    });
+    
+    console.log(`New round started in room ${roomId}${forceReset ? ' (force reset)' : ''}`);
   });
 });
 
