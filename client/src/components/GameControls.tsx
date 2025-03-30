@@ -156,13 +156,10 @@ const GameControls: React.FC = () => {
 							size="small"
 							sx={{
 								fontWeight: "bold",
-								background: "rgba(255, 215, 0, 0.15)",
+								background: "rgb(255, 255, 255)",
 								borderRadius: "4px",
-								color: "#FFD700",
-								border: "1px solid rgba(255, 215, 0, 0.3)",
-								"& .MuiChip-label": {
-									px: 1,
-								},
+								color: "#000",
+                boxShadow: "0 4px 20px rgba(0, 0, 0, 0.4)",
 							}}
 						/>
 					</Box>

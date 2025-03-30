@@ -74,6 +74,7 @@ interface GameContextType {
 	rollDice: () => void;
 	startNewRound: (forceReset?: boolean) => void;
 	setPlayerName: (name: string) => void;
+	resetBalance: () => void;
 }
 
 const GameContext = createContext<GameContextType>({
@@ -94,6 +95,7 @@ const GameContext = createContext<GameContextType>({
 	rollDice: () => {},
 	startNewRound: () => {},
 	setPlayerName: () => {},
+	resetBalance: () => {},
 });
 
 export const useGame = () => useContext(GameContext);
@@ -178,18 +180,17 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
 			// socket.emit('joinRoom', { roomId, playerName });
 		});
 
-		socket.on("error", ({ message }) => {
-			console.error("Game error:", message);
+		socket.on("error", ({ message, code }) => {
+			console.error("Server error:", message);
 			setError(message);
 
-			// Clear the joining state if this was an error from a join attempt
-			if (attemptingJoin) {
-				setAttemptingJoin(false);
-				setAttemptedRoomId(null);
+			// If room not found, clear the room state
+			if (code === "ROOM_NOT_FOUND") {
+				setRoomId(null);
+				if (isBrowser) {
+					localStorage.removeItem('gameRoomId');
+				}
 			}
-
-			// Clear error after 5 seconds
-			setTimeout(() => setError(null), 5000);
 		});
 
 		socket.on("playerJoined", ({ player, players, playerCount }) => {
@@ -199,6 +200,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
 			// If this was our join, clear the joining state
 			if (attemptingJoin && player.id === socket.id) {
 				setAttemptingJoin(false);
+			}
+
+			// Update players list
+			setPlayers(players);
+
+			// Identify the player
+			if (player.name === playerName) {
+				setPlayerId(player.id);
 			}
 		});
 
@@ -272,6 +281,20 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
 			setPayouts(null);
 		});
 
+		socket.on("balanceReset", ({ playerId, newBalance }) => {
+			setPlayers((prevPlayers) => {
+				if (!prevPlayers[playerId]) return prevPlayers;
+
+				return {
+					...prevPlayers,
+					[playerId]: {
+						...prevPlayers[playerId],
+						balance: newBalance,
+					},
+				};
+			});
+		});
+
 		// Cleanup listeners on unmount
 		return () => {
 			socket.off("roomCreated");
@@ -283,6 +306,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
 			socket.off("gameStateChanged");
 			socket.off("diceResults");
 			socket.off("newRound");
+			socket.off("balanceReset");
 		};
 	}, [socket, playerName, attemptingJoin, attemptedRoomId]);
 
@@ -402,6 +426,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
 		socket.emit("startNewRound", { roomId, forceReset });
 	};
 
+	const resetBalance = () => {
+		if (!socket || !roomId || !playerId) return;
+		
+		socket.emit("resetBalance", { roomId });
+	};
+
 	return (
 		<GameContext.Provider
 			value={{
@@ -422,6 +452,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
 				rollDice,
 				startNewRound,
 				setPlayerName,
+				resetBalance,
 			}}
 		>
 			{children}

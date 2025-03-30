@@ -10,6 +10,7 @@ const Game: React.FC = () => {
 	const { gameState, diceResults, error } = useGame();
 
 	const isRolling = gameState === "rolling";
+	const showDice = isRolling || (diceResults && diceResults.length > 0);
 
 	return (
 		<Box
@@ -97,6 +98,23 @@ const Game: React.FC = () => {
 								<GameControls />
 							</Paper>
 
+              {showDice && (
+								<Paper
+									elevation={8}
+									sx={{
+										p: 3,
+									borderRadius: 4,
+									background: "rgba(23, 33, 43, 0.8)",
+									backdropFilter: "blur(8px)",
+									border: "1px solid rgba(255, 255, 255, 0.1)",
+									boxShadow:
+										"0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2)",
+									}}
+								>
+									<Dice />
+								</Paper>
+							)}
+
 							<Paper
 								elevation={8}
 								sx={{
@@ -115,7 +133,21 @@ const Game: React.FC = () => {
 					</Grid>
 					<Grid item xs={8} md={8}>
 						<Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
-							<GameResults />
+							<Paper
+								elevation={8}
+								sx={{
+									p: 3,
+									borderRadius: 4,
+									background: "rgba(23, 33, 43, 0.8)",
+									backdropFilter: "blur(8px)",
+									border: "1px solid rgba(255, 255, 255, 0.1)",
+									boxShadow:
+										"0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2)",
+								}}
+							>
+								<GameResults />
+							</Paper>
+							
 						</Box>
 					</Grid>
 				</Grid>

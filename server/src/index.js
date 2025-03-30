@@ -39,6 +39,24 @@ const io = new Server(server, {
 // Game state storage
 const gameRooms = {};
 
+// Player session tracking
+const playerSessions = {};
+
+// Player name to session mapping for reconnection
+const playerNameToSession = {};
+
+// Room timers for cleanup
+const roomTimers = {};
+
+// Player disconnect tracking with timestamps
+const disconnectedPlayers = {};
+
+// Time to keep empty rooms (in milliseconds) - 5 minutes
+const ROOM_PERSISTENCE_TIME = 5 * 60 * 1000;
+
+// Starting balance for new players
+const STARTING_BALANCE = 1000;
+
 // Symbols for the dice faces
 const SYMBOLS = ['Spade', 'Heart', 'Diamond', 'Club', 'Flag', 'Crown'];
 
@@ -52,7 +70,8 @@ function createGameRoom(roomId) {
     gameState: 'betting', // betting, rolling, results
     playerCount: 0,
     maxPlayers: 15,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    lastActive: new Date().toISOString()
   };
 }
 
@@ -172,78 +191,164 @@ io.on('connection', (socket) => {
   
   // Join an existing game room
   socket.on('joinRoom', ({ roomId, playerName }) => {
-    console.log(`Player ${playerName} attempting to join room ${roomId}`);
+    // Validate input
+    if (!roomId || !playerName) {
+      socket.emit("error", { message: "Room ID and player name are required" });
+      return;
+    }
     
-    try {
-      // Validate room exists
-      if (!gameRooms[roomId]) {
-        console.log(`Room ${roomId} does not exist`);
-        socket.emit('error', { message: 'Room does not exist or has expired' });
-        return;
+    // Check if room exists
+    if (!gameRooms[roomId]) {
+      socket.emit("error", { 
+        message: "Room does not exist or has expired. Please create a new room.",
+        code: "ROOM_NOT_FOUND"
+      });
+      return;
+    }
+    
+    const room = gameRooms[roomId];
+    room.lastActive = new Date().toISOString();
+    
+    // Clear any room deletion timer since we're joining it
+    if (roomTimers[roomId]) {
+      clearTimeout(roomTimers[roomId]);
+      delete roomTimers[roomId];
+      console.log(`Cleared deletion timer for room ${roomId} as player is joining`);
+    }
+    
+    // Check for reconnection by player name and room ID first
+    let sessionData = null;
+    let isNameReconnection = false;
+    
+    // Check if this player name was recently in this room
+    if (playerNameToSession[roomId] && playerNameToSession[roomId][playerName]) {
+      sessionData = playerNameToSession[roomId][playerName];
+      isNameReconnection = true;
+      console.log(`Found session by player name ${playerName} in room ${roomId}`);
+    }
+    
+    // If not found by name, check by socket ID
+    if (!sessionData) {
+      sessionData = playerSessions[socket.id];
+      if (sessionData && sessionData.roomId === roomId) {
+        console.log(`Found session by socket ID for ${playerName} in room ${roomId}`);
+      } else {
+        sessionData = null;
       }
+    }
+    
+    // Have the player join the socket.io room
+    socket.join(roomId);
+    
+    if (sessionData) {
+      console.log(`Player ${playerName} is reconnecting to room ${roomId}, previous balance: ${sessionData.balance}`);
       
-      const room = gameRooms[roomId];
-      
-      // Check if room is full
-      if (room.playerCount >= room.maxPlayers) {
-        console.log(`Room ${roomId} is full (${room.playerCount}/${room.maxPlayers})`);
-        socket.emit('error', { message: 'Room is full' });
-        return;
-      }
-      
-      // Check if player is already in the room
-      if (room.players[socket.id]) {
-        console.log(`Player ${playerName} (${socket.id}) is already in room ${roomId}`);
-        // Just update the game state for the player
-        socket.emit('gameState', {
-          roomId,
-          gameState: room.gameState,
-          players: room.players,
-          bets: room.bets,
-          diceResults: room.diceResults
-        });
-        return;
-      }
-      
-      // Join the room
-      socket.join(roomId);
-      
-      // Add player to the room
+      // Restore player data from saved session
       room.players[socket.id] = {
         id: socket.id,
         name: playerName,
-        balance: 1000, // Starting balance
+        balance: sessionData.balance  // Keep previous balance
       };
       
-      // Initialize empty bets for this player
+      // Check if the game is in results state and should be reset for the reconnected player
+      // This ensures that after refreshing in results state, the game resets to betting state
+      const shouldResetGame = room.gameState === 'results';
+      
+      if (shouldResetGame) {
+        console.log(`Game is in results state. Resetting to betting state for player ${playerName}`);
+        
+        // Reset the game state to betting
+        room.gameState = 'betting';
+        
+        // Clear dice results
+        room.diceResults = [];
+        
+        // Clear all bets while preserving player balances
+        Object.keys(room.bets).forEach(playerId => {
+          SYMBOLS.forEach(symbol => {
+            room.bets[playerId][symbol] = 0;
+          });
+        });
+        
+        // Initialize empty bets for this reconnected player (just to be sure)
+        room.bets[socket.id] = {};
+        SYMBOLS.forEach(symbol => {
+          room.bets[socket.id][symbol] = 0;
+        });
+        
+        // Notify all players in the room about the game state change and reset bets
+        io.to(roomId).emit('newRound', {
+          gameState: 'betting',
+          bets: room.bets
+        });
+      } else {
+        // Just restore bets if we're not resetting the game
+        room.bets[socket.id] = { ...sessionData.bets };
+      }
+      
+      // If reconnecting by name, clean up the old socket ID entry
+      if (isNameReconnection && sessionData.socketId !== socket.id) {
+        delete playerSessions[sessionData.socketId];
+        // Update the socketId reference
+        sessionData.socketId = socket.id;
+        playerSessions[socket.id] = sessionData;
+        playerNameToSession[roomId][playerName] = sessionData;
+      } else {
+        // Clean up the session
+        delete playerSessions[socket.id];
+        
+        if (playerNameToSession[roomId]) {
+          delete playerNameToSession[roomId][playerName];
+          if (Object.keys(playerNameToSession[roomId]).length === 0) {
+            delete playerNameToSession[roomId];
+          }
+        }
+      }
+      
+      console.log(`Restored session for ${playerName} in room ${roomId} with balance ${room.players[socket.id].balance}`);
+    } 
+    else if (room.players[socket.id]) {
+      // Player is already in room - this is a reconnect
+      console.log(`Player ${playerName} (${socket.id}) reconnected to room ${roomId}`);
+      
+      // Update the player name if it changed
+      room.players[socket.id].name = playerName;
+    } 
+    else {
+      // Add new player to the room
+      room.players[socket.id] = {
+        id: socket.id,
+        name: playerName,
+        balance: STARTING_BALANCE,
+      };
+      
+      // Initialize player's bets
       room.bets[socket.id] = {};
       SYMBOLS.forEach(symbol => {
         room.bets[socket.id][symbol] = 0;
       });
       
-      room.playerCount++;
-      
-      // Notify all players in the room
-      io.to(roomId).emit('playerJoined', {
-        player: room.players[socket.id],
-        players: room.players,
-        playerCount: room.playerCount
-      });
-      
-      // Send the current game state to the new player
-      socket.emit('gameState', {
-        roomId,
-        gameState: room.gameState,
-        players: room.players,
-        bets: room.bets,
-        diceResults: room.diceResults
-      });
-      
-      console.log(`Player ${playerName} (${socket.id}) joined room ${roomId} successfully. Total players: ${room.playerCount}`);
-    } catch (error) {
-      console.error('Error joining room:', error);
-      socket.emit('error', { message: 'Failed to join room. Please try again.' });
+      console.log(`New player ${playerName} joined room ${roomId} with starting balance ${STARTING_BALANCE}`);
     }
+    
+    // Update player count
+    room.playerCount = Object.keys(room.players).length;
+    
+    // Send updated player list to all clients in the room
+    io.to(roomId).emit("playerJoined", {
+      player: room.players[socket.id],
+      players: room.players,
+      playerCount: room.playerCount
+    });
+    
+    // Send current game state to the player
+    socket.emit("gameState", {
+      roomId,
+      gameState: room.gameState,
+      players: room.players,
+      bets: room.bets,
+      diceResults: room.diceResults
+    });
   });
 
   // Clean up heartbeat and handle other cleanup on disconnect
@@ -251,16 +356,62 @@ io.on('connection', (socket) => {
     console.log(`User disconnected: ${socket.id}`);
     clearInterval(heartbeatInterval);
     
-    // Find rooms where this player is and remove them
+    // Find rooms where this player is
     Object.keys(gameRooms).forEach(roomId => {
       if (gameRooms[roomId].players[socket.id]) {
         const room = gameRooms[roomId];
-        const playerName = room.players[socket.id].name;
+        const player = room.players[socket.id];
+        
+        if (player) {
+          const playerName = player.name;
+          // Save the player's session data for potential reconnection
+          const sessionData = {
+            roomId,
+            playerName: playerName,
+            balance: player.balance,
+            bets: { ...room.bets[socket.id] },
+            disconnectedAt: new Date().toISOString(),
+            socketId: socket.id
+          };
+          
+          playerSessions[socket.id] = sessionData;
+          
+          // Store by player name and room ID for easier reconnection
+          if (!playerNameToSession[roomId]) {
+            playerNameToSession[roomId] = {};
+          }
+          playerNameToSession[roomId][playerName] = sessionData;
+          
+          // Track this player as disconnected with timestamp
+          disconnectedPlayers[`${roomId}:${playerName}`] = new Date().getTime();
+          
+          // Keep session data for 30 minutes
+          setTimeout(() => {
+            delete playerSessions[socket.id];
+            
+            // Only delete name mapping if it still points to this session
+            if (playerNameToSession[roomId] && 
+                playerNameToSession[roomId][playerName] &&
+                playerNameToSession[roomId][playerName].socketId === socket.id) {
+              delete playerNameToSession[roomId][playerName];
+              
+              // Clean up room key if empty
+              if (Object.keys(playerNameToSession[roomId]).length === 0) {
+                delete playerNameToSession[roomId];
+              }
+            }
+            
+            delete disconnectedPlayers[`${roomId}:${playerName}`];
+          }, 30 * 60 * 1000);
+          
+          console.log(`Saved session for ${playerName} (${socket.id}) in room ${roomId}`);
+        }
         
         // Remove player from room
         delete room.players[socket.id];
         delete room.bets[socket.id];
         room.playerCount--;
+        room.lastActive = new Date().toISOString();
         
         // Notify remaining players
         io.to(roomId).emit('playerLeft', {
@@ -269,12 +420,25 @@ io.on('connection', (socket) => {
           playerCount: room.playerCount
         });
         
-        console.log(`Player ${playerName} disconnected from room ${roomId}`);
+        console.log(`Player disconnected from room ${roomId}, remaining players: ${room.playerCount}`);
         
-        // Clean up empty rooms
+        // If the room is now empty, set a timer to delete it later
         if (room.playerCount === 0) {
-          delete gameRooms[roomId];
-          console.log(`Room ${roomId} deleted (empty)`);
+          console.log(`Room ${roomId} is now empty, starting cleanup timer`);
+          
+          // Clear any existing timer for this room
+          if (roomTimers[roomId]) {
+            clearTimeout(roomTimers[roomId]);
+          }
+          
+          // Set timer to delete the room after persistence time
+          roomTimers[roomId] = setTimeout(() => {
+            if (gameRooms[roomId] && gameRooms[roomId].playerCount === 0) {
+              delete gameRooms[roomId];
+              delete roomTimers[roomId];
+              console.log(`Room ${roomId} deleted after inactivity`);
+            }
+          }, ROOM_PERSISTENCE_TIME);
         }
       }
     });
@@ -344,7 +508,16 @@ io.on('connection', (socket) => {
         const player = room.players[playerId];
         if (player) {
           Object.values(symbolPayouts).forEach(amount => {
-            player.balance += amount;
+            // Ensure we don't go below zero when losing (negative payout)
+            if (amount < 0 && Math.abs(amount) > player.balance) {
+              // If the loss would make balance negative, adjust the payout to match remaining balance
+              const adjustedAmount = -player.balance; // Negative amount that will make balance exactly 0
+              player.balance = 0;
+              // Update the payout to reflect this adjustment
+              payouts[playerId][Object.keys(symbolPayouts).find(key => symbolPayouts[key] === amount)] = adjustedAmount;
+            } else {
+              player.balance += amount;
+            }
           });
         }
       });
@@ -370,6 +543,7 @@ io.on('connection', (socket) => {
       delete room.players[socket.id];
       delete room.bets[socket.id];
       room.playerCount--;
+      room.lastActive = new Date().toISOString();
       
       socket.leave(roomId);
       
@@ -382,10 +556,23 @@ io.on('connection', (socket) => {
       
       console.log(`Player ${playerName} left room ${roomId}`);
       
-      // Clean up empty rooms
+      // If room is now empty, set a timer to delete it after the persistence time
       if (room.playerCount === 0) {
-        delete gameRooms[roomId];
-        console.log(`Room ${roomId} deleted (empty)`);
+        console.log(`Room ${roomId} is now empty after player left, starting cleanup timer`);
+        
+        // Clear any existing timer for this room
+        if (roomTimers[roomId]) {
+          clearTimeout(roomTimers[roomId]);
+        }
+        
+        // Set timer to delete the room after persistence time
+        roomTimers[roomId] = setTimeout(() => {
+          if (gameRooms[roomId] && gameRooms[roomId].playerCount === 0) {
+            delete gameRooms[roomId];
+            delete roomTimers[roomId];
+            console.log(`Room ${roomId} deleted after inactivity`);
+          }
+        }, ROOM_PERSISTENCE_TIME);
       }
     }
   });
@@ -467,6 +654,33 @@ io.on('connection', (socket) => {
     });
     
     console.log(`New round started in room ${roomId}${forceReset ? ' (force reset)' : ''}`);
+  });
+  
+  // Handle resetting player balance
+  socket.on('resetBalance', ({ roomId }) => {
+    if (!gameRooms[roomId]) {
+      socket.emit('error', { message: 'Room not found' });
+      return;
+    }
+    
+    const room = gameRooms[roomId];
+    const player = room.players[socket.id];
+    
+    if (!player) {
+      socket.emit('error', { message: 'Player not found in this room' });
+      return;
+    }
+    
+    // Reset player balance to starting amount
+    player.balance = STARTING_BALANCE;
+    
+    // Notify all players about the balance update
+    io.to(roomId).emit('balanceReset', {
+      playerId: socket.id,
+      newBalance: STARTING_BALANCE
+    });
+    
+    console.log(`Player ${player.name} reset their balance to ${STARTING_BALANCE}`);
   });
 });
 

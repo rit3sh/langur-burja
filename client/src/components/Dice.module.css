@@ -1,0 +1,76 @@
+/* components/Dice.module.css */
+
+  
+  /* --- Dice Structure & Base Style --- */
+  .dice {
+    position: relative;
+    width: 100px; /* Match face translateZ */
+    height: 100px; /* Match face translateZ */
+    transform-style: preserve-3d; /* CRUCIAL for 3D children */
+    transition: transform 1s ease; /* Transition for final state */
+  }
+  
+  /* --- Face Base Styles --- */
+  .face {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    border-radius: 20px;
+    background-color: white;
+    backface-visibility: hidden; /* Hide back when rotated */
+    -webkit-backface-visibility: hidden;
+  
+    /* Common background styles */
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: 80% 80%; /* Adjust as needed */
+  }
+  
+  /* --- Face Positioning --- */
+  /* translateZ is half the .dice width/height */
+  .front  { transform: translateZ(60px); }
+  .back   { transform: rotateX(180deg) translateZ(60px); }
+  .top    { transform: rotateX(90deg) translateZ(60px); }
+  .bottom { transform: rotateX(-90deg) translateZ(60px); }
+  .right  { transform: rotateY(90deg) translateZ(60px); }
+  .left   { transform: rotateY(-90deg) translateZ(60px); }
+  
+  
+  /* --- Assign Background Images --- */
+  /* Use /img/ because Next.js serves from 'public' root */
+  .front { background-image: url('/images/surot.png'); }
+  .top   { background-image: url('/images/chidi.png'); }
+  .right { background-image: url('/images/burja.png'); }
+  .left  { background-image: url('/images/paan.png'); }
+  .bottom{ background-image: url('/images/itta.png'); }
+  .back  { background-image: url('/images/jhanda.png'); }
+  
+  
+  /* --- Roll Button --- */
+  .rollButton { /* Renamed from just .roll */
+    cursor: pointer;
+    color: #b33951;
+    margin-top: 70px;
+    padding: 8px 16px;
+    border-radius: 5px;
+    font: 700 18px 'Montserrat', sans-serif; /* Ensure font is loaded globally or import here */
+    border: 2px solid #b33951;
+    transition: background-color .3s, color .3s, transform 0.1s ease; /* Added transform transition */
+    background-color: transparent;
+    user-select: none; /* Prevent text selection on rapid clicks */
+  }
+  
+  .rollButton:hover {
+    color: #fff;
+    background-color: #b33951;
+  }
+  
+  .rollButton:active {
+    transform: scale(0.95);
+    background-color: #a32941;
+  }
+  
+  .rollButton:disabled { /* Style for when rolling */
+      cursor: not-allowed;
+      opacity: 0.6;
+  }
