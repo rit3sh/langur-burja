@@ -28,22 +28,22 @@
   
   /* --- Face Positioning --- */
   /* translateZ is half the .dice width/height */
-  .front  { transform: translateZ(60px); }
-  .back   { transform: rotateX(180deg) translateZ(60px); }
-  .top    { transform: rotateX(90deg) translateZ(60px); }
-  .bottom { transform: rotateX(-90deg) translateZ(60px); }
-  .right  { transform: rotateY(90deg) translateZ(60px); }
-  .left   { transform: rotateY(-90deg) translateZ(60px); }
+  .front  { transform: translateZ(60px); }         /* Spade (surot) */
+  .back   { transform: rotateX(180deg) translateZ(60px); } /* Flag (jhanda) */
+  .top    { transform: rotateX(90deg) translateZ(60px); }  /* Club (chidi) */
+  .bottom { transform: rotateX(-90deg) translateZ(60px); } /* Diamond (itta) */
+  .right  { transform: rotateY(90deg) translateZ(60px); }  /* Crown (burja) */
+  .left   { transform: rotateY(-90deg) translateZ(60px); } /* Heart (paan) */
   
   
   /* --- Assign Background Images --- */
   /* Use /img/ because Next.js serves from 'public' root */
-  .front { background-image: url('/images/surot.png'); }
-  .top   { background-image: url('/images/chidi.png'); }
-  .right { background-image: url('/images/burja.png'); }
-  .left  { background-image: url('/images/paan.png'); }
-  .bottom{ background-image: url('/images/itta.png'); }
-  .back  { background-image: url('/images/jhanda.png'); }
+  .front  { background-image: url('/images/surot.png'); }  /* Spade */
+  .top    { background-image: url('/images/chidi.png'); }  /* Club */
+  .right  { background-image: url('/images/burja.png'); }  /* Crown */
+  .left   { background-image: url('/images/paan.png'); }   /* Heart */
+  .bottom { background-image: url('/images/itta.png'); }   /* Diamond */
+  .back   { background-image: url('/images/jhanda.png'); } /* Flag */
   
   
   /* --- Roll Button --- */

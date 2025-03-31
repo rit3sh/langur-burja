@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Container, Grid, Paper, Typography, Alert } from "@mui/material";
 import { useGame } from "../context/GameContext";
 import Dice from "./Dice";
@@ -8,9 +8,28 @@ import GameResults from "./GameResults";
 
 const Game: React.FC = () => {
 	const { gameState, diceResults, error } = useGame();
+	const [allDiceRollCompleted, setAllDiceRollCompleted] = useState(false);
 
 	const isRolling = gameState === "rolling";
 	const showDice = isRolling || (diceResults && diceResults.length > 0);
+
+	// Reset the dice completion state when game state changes to rolling
+	// or when diceResults change
+	useEffect(() => {
+		if (gameState === "rolling") {
+			setAllDiceRollCompleted(false);
+		}
+	}, [gameState, diceResults]);
+
+	// Handler for when all dice have completed rolling
+	const handleAllDiceRollComplete = () => {
+		if (gameState === "results") {
+			setAllDiceRollCompleted(true);
+		}
+	};
+
+	// Debug output for development
+	console.log("Game State:", gameState, "All Dice Completed:", allDiceRollCompleted);
 
 	return (
 		<Box
@@ -98,23 +117,6 @@ const Game: React.FC = () => {
 								<GameControls />
 							</Paper>
 
-              {showDice && (
-								<Paper
-									elevation={8}
-									sx={{
-										p: 3,
-									borderRadius: 4,
-									background: "rgba(23, 33, 43, 0.8)",
-									backdropFilter: "blur(8px)",
-									border: "1px solid rgba(255, 255, 255, 0.1)",
-									boxShadow:
-										"0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2)",
-									}}
-								>
-									<Dice />
-								</Paper>
-							)}
-
 							<Paper
 								elevation={8}
 								sx={{
@@ -132,22 +134,9 @@ const Game: React.FC = () => {
 						</Box>
 					</Grid>
 					<Grid item xs={8} md={8}>
-						<Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
-							<Paper
-								elevation={8}
-								sx={{
-									p: 3,
-									borderRadius: 4,
-									background: "rgba(23, 33, 43, 0.8)",
-									backdropFilter: "blur(8px)",
-									border: "1px solid rgba(255, 255, 255, 0.1)",
-									boxShadow:
-										"0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2)",
-								}}
-							>
-								<GameResults />
-							</Paper>
-							
+						<Box sx={{ display: "flex", flexDirection: "column" }}>
+							<GameResults allDiceRollCompleted={allDiceRollCompleted} />
+							<Dice onAllDiceRollComplete={handleAllDiceRollComplete} />
 						</Box>
 					</Grid>
 				</Grid>

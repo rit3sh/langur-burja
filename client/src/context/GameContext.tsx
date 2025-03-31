@@ -13,12 +13,12 @@ export type SymbolType =
 	| "Flag"
 	| "Crown";
 export const SYMBOLS: SymbolType[] = [
-	"Club",
-	"Crown",
 	"Spade",
-	"Diamond",
-	"Flag",
 	"Heart",
+	"Diamond",
+	"Club",
+	"Flag",
+	"Crown",
 ];
 
 // Nepali names for symbols - for display purposes

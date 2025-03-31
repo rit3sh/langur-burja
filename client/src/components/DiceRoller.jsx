@@ -1,17 +1,17 @@
 // components/DiceRoller.jsx
 "use client"; // Add this directive if using Next.js App Router
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import styles from "./Dice.module.css"; // Import the CSS Module
 
 // Map for converting symbol names to face numbers
 const symbolToFace = {
-	'Club': 2,   // Top face
-	'Crown': 6,  // Back face 
-	'Spade': 1,  // Front face
-	'Diamond': 5, // Bottom face
-	'Flag': 3,   // Right face
-	'Heart': 4    // Left face
+	Spade: 1, // Front - surot.png
+	Club: 2, // Top - chidi.png
+	Heart: 3, // Right - paan.png	
+	Crown: 4, // Left - burja.png
+	Diamond: 5, // Bottom - itta.png
+	Flag: 6, // Back - jhanda.png
 };
 
 const DiceRoller = ({ autoRoll = false, onRollComplete, finalSymbol }) => {
@@ -22,25 +22,31 @@ const DiceRoller = ({ autoRoll = false, onRollComplete, finalSymbol }) => {
 	// Unique animation duration for this dice instance
 	const [animationDuration, setAnimationDuration] = useState(0);
 	// Unique animation class for this dice instance
-	const [animationClass, setAnimationClass] = useState('');
+	const [animationClass, setAnimationClass] = useState("");
+	// Ref to prevent multiple callbacks for the same roll
+	const callbackFiredRef = useRef(false);
+	// Ref to track the latest roll ID to avoid stale callbacks
+	const rollIdRef = useRef(0);
 
 	// On mount, set a random animation duration for this specific die
 	useEffect(() => {
 		// Generate a random duration between 3-5 seconds
 		const randomDuration = 3000 + Math.floor(Math.random() * 2000);
 		setAnimationDuration(randomDuration);
-		
+
 		// Create a unique animation class for this die
 		const uniqueId = Math.floor(Math.random() * 10000);
 		const newAnimationClass = `diceRolling_${uniqueId}`;
 		setAnimationClass(newAnimationClass);
-		
+
 		// Dynamically create the keyframes for this animation with a random speed
 		const styleSheet = document.styleSheets[0];
 		const keyframes = `
 			@keyframes ${newAnimationClass} {
 				0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
-				100% { transform: rotateX(${720 + Math.random() * 360}deg) rotateY(${720 + Math.random() * 360}deg) rotateZ(${Math.random() * 360}deg); }
+				100% { transform: rotateX(${720 + Math.random() * 360}deg) rotateY(${
+			720 + Math.random() * 360
+		}deg) rotateZ(${Math.random() * 360}deg); }
 			}
 		`;
 		styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
@@ -49,18 +55,18 @@ const DiceRoller = ({ autoRoll = false, onRollComplete, finalSymbol }) => {
 	// Calculate the CSS transform based on the face number
 	const calculateTransform = (face) => {
 		switch (face) {
-			case 1:
-				return "rotateX(0deg) rotateY(0deg)"; // Front - Spade
-			case 6:
-				return "rotateX(180deg) rotateY(0deg)"; // Back - Crown
-			case 2:
-				return "rotateX(-90deg) rotateY(0deg)"; // Top - Club
-			case 5:
-				return "rotateX(90deg) rotateY(0deg)"; // Bottom - Diamond
-			case 3:
-				return "rotateX(0deg) rotateY(90deg)"; // Right - Flag
-			case 4:
-				return "rotateX(0deg) rotateY(-90deg)"; // Left - Heart
+			case 1: // Front - Spade (surot)
+				return "rotateX(0deg) rotateY(0deg)";
+			case 2: // Top - Club (chidi)
+				return "rotateX(-90deg) rotateY(0deg)";
+			case 3: // Right - Crown (burja)
+				return "rotateX(0deg) rotateY(90deg)";
+			case 4: // Left - Heart (paan)
+				return "rotateX(0deg) rotateY(-90deg)";
+			case 5: // Bottom - Diamond (itta)
+				return "rotateX(90deg) rotateY(0deg)";
+			case 6: // Back - Flag (jhanda)
+				return "rotateX(180deg) rotateY(0deg)";
 			default:
 				return "rotateX(0deg) rotateY(0deg)";
 		}
@@ -71,7 +77,9 @@ const DiceRoller = ({ autoRoll = false, onRollComplete, finalSymbol }) => {
 		if (isRolling) return; // Don't roll if already rolling
 
 		setIsRolling(true);
-		
+		callbackFiredRef.current = false; // Reset the callback fired state
+		const currentRollId = ++rollIdRef.current; // Increment roll ID to track this specific roll
+
 		// Determine the final face
 		let finalFace;
 		if (finalSymbol && symbolToFace[finalSymbol]) {
@@ -84,16 +92,24 @@ const DiceRoller = ({ autoRoll = false, onRollComplete, finalSymbol }) => {
 
 		// Wait for the animation to finish with our custom duration
 		setTimeout(() => {
-			setCurrentFace(finalFace); // Set the final face
-			setIsRolling(false); // Stop rolling state
-			if (onRollComplete) {
-				// Convert back to symbol for callback
-				const faceToSymbol = Object.entries(symbolToFace)
-					.reduce((acc, [symbol, face]) => {
-						acc[face] = symbol;
-						return acc;
-					}, {});
-				onRollComplete(faceToSymbol[finalFace] || 'Spade');
+			// Only process if this callback is for the most recent roll
+			if (currentRollId === rollIdRef.current) {
+				setCurrentFace(finalFace); // Set the final face
+				setIsRolling(false); // Stop rolling state
+
+				// Ensure callback is only called once per roll
+				if (onRollComplete && !callbackFiredRef.current) {
+					callbackFiredRef.current = true;
+					// Convert back to symbol for callback
+					const faceToSymbol = Object.entries(symbolToFace).reduce(
+						(acc, [symbol, face]) => {
+							acc[face] = symbol;
+							return acc;
+						},
+						{}
+					);
+					onRollComplete(faceToSymbol[finalFace] || "Spade");
+				}
 			}
 		}, animationDuration);
 	}, [isRolling, onRollComplete, finalSymbol, animationDuration]);
@@ -112,6 +128,17 @@ const DiceRoller = ({ autoRoll = false, onRollComplete, finalSymbol }) => {
 		}
 	}, [finalSymbol, isRolling]);
 
+	// Reset callback fired ref when dice stops rolling
+	useEffect(() => {
+		if (!isRolling) {
+			// Set a small delay to ensure any pending callbacks have fired
+			const timer = setTimeout(() => {
+				callbackFiredRef.current = false;
+			}, 100);
+			return () => clearTimeout(timer);
+		}
+	}, [isRolling]);
+
 	// Style object for the dice element's transform
 	// Apply only when *not* rolling, otherwise animation controls transform
 	const diceStyle = !isRolling
@@ -119,29 +146,21 @@ const DiceRoller = ({ autoRoll = false, onRollComplete, finalSymbol }) => {
 		: {};
 
 	// Add custom animation style when rolling
-	const rollingStyle = isRolling && animationClass ? {
-		animation: `${animationClass} ${animationDuration}ms linear`
-	} : {};
-
-	// Custom styling to make dice faces visible
-	const containerStyle = {
-		display: "flex",
-		justifyContent: "center",
-		alignItems: "center",
-		width: "100%",
-		height: "100%",
-		perspective: "1000px",
-		perspectiveOrigin: "center center",
-	};
+	const rollingStyle =
+		isRolling && animationClass
+			? {
+					animation: `${animationClass} ${animationDuration}ms linear`,
+			  }
+			: {};
 
 	const faceStyle = {
 		backgroundColor: "#ffffff",
 		border: "2px solid #cccccc",
-		boxShadow: "inset 0 0 10px rgba(0, 0, 0, 0.1)"
+		boxShadow: "inset 0 0 10px rgba(0, 0, 0, 0.1)",
 	};
 
 	return (
-		<div style={containerStyle}>
+		<div>
 			{/* Apply custom animation style instead of class */}
 			<div
 				className={`${styles.dice}`}

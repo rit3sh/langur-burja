@@ -5,12 +5,14 @@ import { useGame, SymbolType, SYMBOLS } from "../context/GameContext";
 
 interface DiceProps {
 	count?: number;
+	onAllDiceRollComplete?: () => void;
 }
 
-const Dice: React.FC<DiceProps> = ({ count = 6 }) => {
+const Dice: React.FC<DiceProps> = ({ count = 6, onAllDiceRollComplete }) => {
 	const { gameState, diceResults } = useGame();
 	const [autoRoll, setAutoRoll] = useState(false);
 	const [displaySymbols, setDisplaySymbols] = useState<SymbolType[]>([]);
+	const [completedDice, setCompletedDice] = useState<boolean[]>([]);
 
 	// Count occurrences of each symbol in diceResults
 	const getSymbolCounts = (results: SymbolType[]) => {
@@ -25,6 +27,16 @@ const Dice: React.FC<DiceProps> = ({ count = 6 }) => {
 
 		return counts;
 	};
+
+	// Reset completed dice when starting a new roll or when display symbols change
+	useEffect(() => {
+		if (gameState === "rolling" || displaySymbols.length === 0) {
+			setCompletedDice(Array(count).fill(false));
+		} else if (displaySymbols.length !== completedDice.length) {
+			// Adjust completedDice array if number of dice changes
+			setCompletedDice(Array(displaySymbols.length).fill(false));
+		}
+	}, [gameState, displaySymbols.length, count]);
 
 	// Handle the dice rolling state and prepare symbols for display
 	useEffect(() => {
@@ -48,64 +60,60 @@ const Dice: React.FC<DiceProps> = ({ count = 6 }) => {
 			if (diceResults && diceResults.length > 0) {
 				// Simply use the exact dice results from the server - don't modify them
 				// This ensures we display the exact same dice that were rolled
+				console.log("diceResults", diceResults);
 				setDisplaySymbols([...diceResults]);
 			}
 		}
 	}, [gameState, diceResults, count]);
 
+	// Handle all dice completing their animation
+	useEffect(() => {
+		// Check if all dice have completed rolling
+		if (completedDice.length > 0 && 
+			completedDice.every(isDone => isDone) && 
+			gameState === "results") {
+			// Make sure to only notify once when all dice are done
+			if (onAllDiceRollComplete) {
+				onAllDiceRollComplete();
+			}
+		}
+	}, [completedDice, gameState, onAllDiceRollComplete]);
+
+	// Track each individual die completing its animation
+	const handleDiceRollComplete = (index: number) => {
+		setCompletedDice(prev => {
+			const updated = [...prev];
+			updated[index] = true;
+			return updated;
+		});
+	};
+
 	return (
 		<>
-			<Typography
-				variant="h5"
-				gutterBottom
-				sx={{
-					color: "primary.main",
-					fontWeight: 600,
-					textShadow: "0 2px 4px rgba(0,0,0,0.3)",
-					mb: 3,
-					position: "relative",
-					display: "inline-block",
-					"&::after": {
-						content: '""',
-						position: "absolute",
-						left: 0,
-						bottom: -8,
-						width: "60%",
-						height: 3,
-						background: "linear-gradient(90deg, #FFD700, transparent)",
-						borderRadius: 3,
-					},
-				}}
-			>
-				Game Results
-			</Typography>
-
-			<Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-				<Grid container spacing={1} justifyContent="center">
-					{displaySymbols.map((symbol, index) => (
-						<Grid item key={index} xs={4} sm={4} md={4}>
-							<Box
-								sx={{
-									transform: "scale(0.50)",
-									transformOrigin: "center center",
-									mb: 1,
-									mt: 1,
-									display: "flex",
-									justifyContent: "center",
+			<Grid container spacing={1} justifyContent="center">
+				{displaySymbols.map((symbol, index) => (
+					<Grid item key={index} xs={2} sm={2} md={2}>
+						<Box
+							sx={{
+								transform: "scale(0.50)",
+								transformOrigin: "center center",
+								mb: 1,
+								mt: 1,
+								display: "flex",
+								justifyContent: "center",
+							}}
+						>
+							<DiceRoller
+								autoRoll={autoRoll}
+								finalSymbol={symbol}
+								onRollComplete={() => {
+									handleDiceRollComplete(index);
 								}}
-							>
-								<DiceRoller
-									autoRoll={autoRoll}
-									finalSymbol={symbol}
-									onRollComplete={() => {
-										// Optional callback when roll is complete
-									}}
-								/>
-							</Box>
-						</Grid>
-					))}
-				</Grid>
-			</Box>
+							/>
+						</Box>
+					</Grid>
+				))}
+			</Grid>
 		</>
 	);
 };

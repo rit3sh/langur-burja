@@ -17,6 +17,7 @@ import {
 	NEPALI_SYMBOLS,
 } from "../context/GameContext";
 import DiceSymbol from "./DiceSymbol";
+import GameResultsDisplay from "./GameResultsDisplay";
 
 // Define background colors for each symbol
 const getSymbolBgColor = (symbol: SymbolType): string => {
@@ -371,10 +372,6 @@ const SymbolCount: React.FC<SymbolCountProps> = ({
 					badgeContent={"x" + count}
 					showZero
 					color={count > 0 ? "success" : "secondary"}
-					sx={{
-						mt: 2,
-						mb: 2,
-					}}
 				/>
 			) : null}
 
@@ -437,54 +434,6 @@ const GameBoard: React.FC<GameBoardProps> = ({
 				</Grid>
 			))}
 		</Grid>
-	);
-};
-
-// 4. GAME RESULTS DISPLAY COMPONENT
-interface GameResultsDisplayProps {
-	totalWinnings: number;
-}
-
-const GameResultsDisplay: React.FC<GameResultsDisplayProps> = ({
-	totalWinnings,
-}) => {
-
-	if (totalWinnings === 0) return null;
-
-	return (
-		<Box
-			sx={{
-				mt: 3,
-				p: 2,
-				backgroundColor:
-					totalWinnings > 0
-						? "rgba(76, 175, 80, 0.2)"
-						: totalWinnings < 0
-						? "rgba(244, 67, 54, 0.2)"
-						: "rgba(117, 117, 117, 0.2)",
-				borderRadius: 2,
-				border: "1px solid rgba(255, 255, 255, 0.1)",
-				backdropFilter: "blur(8px)",
-			}}
-		>
-			<Typography
-				variant="subtitle1"
-				sx={{
-					fontWeight: "bold",
-					color:
-						totalWinnings > 0
-							? "#4CAF50"
-							: totalWinnings < 0
-							? "#f44336"
-							: "#757575",
-					textAlign: "center",
-					textShadow: "0 1px 2px rgba(0,0,0,0.3)",
-				}}
-			>
-				Total Winnings: {totalWinnings > 0 ? "+" : ""}
-				{totalWinnings}
-			</Typography>
-		</Box>
 	);
 };
 
@@ -554,7 +503,11 @@ const ZeroBalanceAlert: React.FC = () => {
 };
 
 // 5. MAIN COMPONENT THAT COMBINES ALL THREE
-const GameResults: React.FC = () => {
+interface GameResultsProps {
+	allDiceRollCompleted?: boolean;
+}
+
+const GameResults: React.FC<GameResultsProps> = ({ allDiceRollCompleted = false }) => {
 	const { diceResults, payouts, playerId, players, gameState } = useGame();
 	const [globalBetAmount, setGlobalBetAmount] = useState<string>("10");
 
@@ -603,10 +556,14 @@ const GameResults: React.FC = () => {
 			/>
 
 			{/* Winnings Display */}
-			<GameResultsDisplay totalWinnings={totalWinnings} />
+			<GameResultsDisplay 
+				totalWinnings={totalWinnings} 
+				allDiceRollCompleted={allDiceRollCompleted}
+				gameState={gameState}
+			/>
 			
 			{/* Zero Balance Alert */}
-			{hasZeroBalance && gameState === "results" && <ZeroBalanceAlert />}
+			{hasZeroBalance && gameState === "results" && allDiceRollCompleted && <ZeroBalanceAlert />}
 		</>
 	);
 };
