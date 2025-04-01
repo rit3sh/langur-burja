@@ -15,8 +15,14 @@ import {
 	Warning as WarningIcon,
 } from "@mui/icons-material";
 import { useGame } from "../context/GameContext";
+import Dice from "./Dice";
 
-const GameControls: React.FC = () => {
+
+interface GameControlsProps {
+	onAllDiceRollComplete: () => void;
+}
+
+const GameControls: React.FC<GameControlsProps> = ({ onAllDiceRollComplete }) => {
 	const { gameState, rollDice, leaveRoom, startNewRound, roomId, bets, playerId } = useGame();
 	const [rollingTooLong, setRollingTooLong] = useState(false);
 
@@ -165,6 +171,8 @@ const GameControls: React.FC = () => {
 					</Box>
 				</Box>
 
+				<Dice onAllDiceRollComplete={onAllDiceRollComplete} />
+				
 				{/* Action buttons */}
 				<Box sx={{ display: "flex", gap: 2, flexDirection: "column" }}>
 					<Box sx={{ display: "flex", gap: 2 }}>

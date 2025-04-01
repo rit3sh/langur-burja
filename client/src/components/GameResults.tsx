@@ -367,13 +367,13 @@ const SymbolCount: React.FC<SymbolCountProps> = ({
 				disabled={disabled}
 			/>
 
-			{hasRolled ? (
+			{/* {hasRolled ? (
 				<Badge
 					badgeContent={"x" + count}
 					showZero
 					color={count > 0 ? "success" : "secondary"}
 				/>
-			) : null}
+			) : null} */}
 
 			{hasBet ? (
 				<Box
@@ -423,7 +423,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
 }) => {
 	return (
 		<Grid container spacing={2} sx={{ opacity: disabled ? 0.5 : 1 }}>
-			{SYMBOLS.map((symbol) => (
+			{SYMBOLS.filter(symbol => symbol !== "Question").map((symbol) => (
 				<Grid item xs={6} sm={4} key={symbol}>
 					<SymbolCount
 						symbol={symbol}

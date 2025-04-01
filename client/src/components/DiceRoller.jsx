@@ -12,6 +12,7 @@ const symbolToFace = {
 	Crown: 4, // Left - burja.png
 	Diamond: 5, // Bottom - itta.png
 	Flag: 6, // Back - jhanda.png
+	Question: 1, // Default to Spade face but will be handled specially
 };
 
 const DiceRoller = ({ autoRoll = false, onRollComplete, finalSymbol }) => {
@@ -83,6 +84,19 @@ const DiceRoller = ({ autoRoll = false, onRollComplete, finalSymbol }) => {
 		// Determine the final face
 		let finalFace;
 		if (finalSymbol && symbolToFace[finalSymbol]) {
+			// Skip actual rolling for Question symbol to show it immediately
+			if (finalSymbol === "Question") {
+				setIsRolling(false);
+				setCurrentFace(symbolToFace[finalSymbol]);
+				
+				// Call the completion callback right away
+				if (onRollComplete && !callbackFiredRef.current) {
+					callbackFiredRef.current = true;
+					onRollComplete("Question");
+				}
+				return;
+			}
+			
 			// Use the provided symbol to determine the final face
 			finalFace = symbolToFace[finalSymbol];
 		} else {
@@ -153,6 +167,9 @@ const DiceRoller = ({ autoRoll = false, onRollComplete, finalSymbol }) => {
 			  }
 			: {};
 
+	// Determine if we should display question mark styling
+	const isQuestionSymbol = finalSymbol === "Question";
+
 	const faceStyle = {
 		backgroundColor: "#ffffff",
 		border: "2px solid #cccccc",
@@ -170,12 +187,12 @@ const DiceRoller = ({ autoRoll = false, onRollComplete, finalSymbol }) => {
 				}`} // Accessibility
 			>
 				{/* Apply face and specific face classes with additional inline styles */}
-				<div className={`${styles.face} ${styles.front}`} style={faceStyle}></div>
-				<div className={`${styles.face} ${styles.back}`} style={faceStyle}></div>
-				<div className={`${styles.face} ${styles.top}`} style={faceStyle}></div>
-				<div className={`${styles.face} ${styles.bottom}`} style={faceStyle}></div>
-				<div className={`${styles.face} ${styles.right}`} style={faceStyle}></div>
-				<div className={`${styles.face} ${styles.left}`} style={faceStyle}></div>
+				<div className={`${styles.face} ${styles.front} ${isQuestionSymbol ? styles.question : ''}`} style={faceStyle}></div>
+				<div className={`${styles.face} ${styles.back} ${isQuestionSymbol ? styles.question : ''}`} style={faceStyle}></div>
+				<div className={`${styles.face} ${styles.top} ${isQuestionSymbol ? styles.question : ''}`} style={faceStyle}></div>
+				<div className={`${styles.face} ${styles.bottom} ${isQuestionSymbol ? styles.question : ''}`} style={faceStyle}></div>
+				<div className={`${styles.face} ${styles.right} ${isQuestionSymbol ? styles.question : ''}`} style={faceStyle}></div>
+				<div className={`${styles.face} ${styles.left} ${isQuestionSymbol ? styles.question : ''}`} style={faceStyle}></div>
 			</div>
 		</div>
 	);

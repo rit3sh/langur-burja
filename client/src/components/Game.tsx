@@ -114,7 +114,7 @@ const Game: React.FC = () => {
 										"0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2)",
 								}}
 							>
-								<GameControls />
+								<GameControls onAllDiceRollComplete={handleAllDiceRollComplete} />
 							</Paper>
 
 							<Paper
@@ -136,7 +136,7 @@ const Game: React.FC = () => {
 					<Grid item xs={8} md={8}>
 						<Box sx={{ display: "flex", flexDirection: "column" }}>
 							<GameResults allDiceRollCompleted={allDiceRollCompleted} />
-							<Dice onAllDiceRollComplete={handleAllDiceRollComplete} />
+							
 						</Box>
 					</Grid>
 				</Grid>

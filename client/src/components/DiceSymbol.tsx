@@ -17,6 +17,8 @@ const getSymbolImage = (symbol: SymbolType): string => {
 			return "/images/jhanda.png";
 		case "Crown":
 			return "/images/burja.png";
+		case "Question":
+			return "/images/question.png";
 		default:
 			return "";
 	}
@@ -74,6 +76,14 @@ const getSymbolStyle = (symbol: SymbolType) => {
 				bgColor: woodBgBase,
 				borderColor: "#9e845f",
 				symbol: "♚",
+				textShadow: "0 1px 0 rgba(255,255,255,0.4)",
+			};
+		case "Question": // Question Mark
+			return {
+				color: "#757575",
+				bgColor: woodBgBase,
+				borderColor: "#9e845f",
+				symbol: "?",
 				textShadow: "0 1px 0 rgba(255,255,255,0.4)",
 			};
 		default:

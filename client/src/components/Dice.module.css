@@ -45,32 +45,6 @@
   .bottom { background-image: url('/images/itta.png'); }   /* Diamond */
   .back   { background-image: url('/images/jhanda.png'); } /* Flag */
   
+  /* Question mark class */
+  .question { background-image: url('/images/question.png'); }
   
-  /* --- Roll Button --- */
-  .rollButton { /* Renamed from just .roll */
-    cursor: pointer;
-    color: #b33951;
-    margin-top: 70px;
-    padding: 8px 16px;
-    border-radius: 5px;
-    font: 700 18px 'Montserrat', sans-serif; /* Ensure font is loaded globally or import here */
-    border: 2px solid #b33951;
-    transition: background-color .3s, color .3s, transform 0.1s ease; /* Added transform transition */
-    background-color: transparent;
-    user-select: none; /* Prevent text selection on rapid clicks */
-  }
-  
-  .rollButton:hover {
-    color: #fff;
-    background-color: #b33951;
-  }
-  
-  .rollButton:active {
-    transform: scale(0.95);
-    background-color: #a32941;
-  }
-  
-  .rollButton:disabled { /* Style for when rolling */
-      cursor: not-allowed;
-      opacity: 0.6;
-  }

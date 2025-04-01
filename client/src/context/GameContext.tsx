@@ -11,7 +11,8 @@ export type SymbolType =
 	| "Diamond"
 	| "Club"
 	| "Flag"
-	| "Crown";
+	| "Crown"
+	| "Question";
 export const SYMBOLS: SymbolType[] = [
 	"Spade",
 	"Heart",
@@ -19,6 +20,7 @@ export const SYMBOLS: SymbolType[] = [
 	"Club",
 	"Flag",
 	"Crown",
+	"Question",
 ];
 
 // Nepali names for symbols - for display purposes
@@ -29,6 +31,7 @@ export const NEPALI_SYMBOLS: Record<SymbolType, string> = {
 	Diamond: "ईट्टा",
 	Flag: "झंडी",
 	Heart: "पान",
+	Question: "प्रश्न",
 };
 
 // Game states

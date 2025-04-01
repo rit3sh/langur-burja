@@ -11,14 +11,26 @@ interface DiceProps {
 const Dice: React.FC<DiceProps> = ({ count = 6, onAllDiceRollComplete }) => {
 	const { gameState, diceResults } = useGame();
 	const [autoRoll, setAutoRoll] = useState(false);
-	const [displaySymbols, setDisplaySymbols] = useState<SymbolType[]>([]);
+	const [displaySymbols, setDisplaySymbols] = useState<SymbolType[]>(() => {
+		// Initialize with question marks
+		return Array(count).fill(null).map(() => "Question");
+	});
 	const [completedDice, setCompletedDice] = useState<boolean[]>([]);
+
+	// Force initialization with Question symbol
+	useEffect(() => {
+		// Set initial display to question marks
+		setDisplaySymbols(Array(count).fill(null).map(() => "Question"));
+		console.log("Dice component initialized with Question symbols");
+	}, [count]);
 
 	// Count occurrences of each symbol in diceResults
 	const getSymbolCounts = (results: SymbolType[]) => {
 		const counts: Record<string, number> = {};
 		SYMBOLS.forEach((symbol) => {
-			counts[symbol] = 0;
+			if (symbol !== "Question") { // Don't count question marks
+				counts[symbol] = 0;
+			}
 		});
 
 		results.forEach((symbol) => {
@@ -48,10 +60,14 @@ const Dice: React.FC<DiceProps> = ({ count = 6, onAllDiceRollComplete }) => {
 			const tempSymbols = Array(count)
 				.fill(null)
 				.map(() => {
-					const randomIndex = Math.floor(Math.random() * SYMBOLS.length);
+					const randomIndex = Math.floor(Math.random() * (SYMBOLS.length - 1)); // Exclude Question
 					return SYMBOLS[randomIndex];
 				});
 			setDisplaySymbols(tempSymbols);
+		} else if (gameState === "betting") {
+			// When a new game starts (betting state), reset to question marks
+			setAutoRoll(false);
+			setDisplaySymbols(Array(count).fill(null).map(() => "Question"));
 		} else {
 			// When not rolling, ensure auto-roll is disabled
 			setAutoRoll(false);
@@ -60,9 +76,9 @@ const Dice: React.FC<DiceProps> = ({ count = 6, onAllDiceRollComplete }) => {
 			if (diceResults && diceResults.length > 0) {
 				// Simply use the exact dice results from the server - don't modify them
 				// This ensures we display the exact same dice that were rolled
-				console.log("diceResults", diceResults);
 				setDisplaySymbols([...diceResults]);
 			}
+			// Note: If no dice results, we keep the current displaySymbols
 		}
 	}, [gameState, diceResults, count]);
 
@@ -90,15 +106,13 @@ const Dice: React.FC<DiceProps> = ({ count = 6, onAllDiceRollComplete }) => {
 
 	return (
 		<>
-			<Grid container spacing={1} justifyContent="center">
+			<Grid container spacing={1} justifyContent="center" xs={12} sm={12} md={12}>
 				{displaySymbols.map((symbol, index) => (
-					<Grid item key={index} xs={2} sm={2} md={2}>
+					
 						<Box
 							sx={{
 								transform: "scale(0.50)",
 								transformOrigin: "center center",
-								mb: 1,
-								mt: 1,
 								display: "flex",
 								justifyContent: "center",
 							}}
@@ -111,7 +125,7 @@ const Dice: React.FC<DiceProps> = ({ count = 6, onAllDiceRollComplete }) => {
 								}}
 							/>
 						</Box>
-					</Grid>
+				
 				))}
 			</Grid>
 		</>
